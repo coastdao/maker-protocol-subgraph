@@ -4,6 +4,8 @@ import { tests } from '../../../../../src/mappings/modules/tests'
 import { system as systemModule } from '../../../../../src/entities'
 import { Kick } from '../../../../../generated/Flop/Flopper'
 import { handleKick } from '../../../../../src/mappings/modules/system-stabilizer/flop'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('Flopper#handleKick', () => {
   test('creates the entity Auction', () => {

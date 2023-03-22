@@ -3,6 +3,8 @@ import { describe, test, assert, clearStore, beforeAll, afterAll } from 'matchst
 import { LogNote } from '../../../../../generated/Pot/Pot'
 import { handleJoin } from '../../../../../src/mappings/modules/rates/pot'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 var defaultAmount: string
 

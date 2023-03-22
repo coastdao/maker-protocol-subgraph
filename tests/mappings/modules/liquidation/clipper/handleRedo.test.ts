@@ -1,11 +1,11 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts'
 import { test, assert, clearStore, describe } from 'matchstick-as'
 import { tests } from '../../../../../src/mappings/modules/tests'
-import { Redo as RedoEvent } from '../../../../../generated/Clipper/Clipper'
+import { Redo as RedoEvent } from '../../../../../generated/ClipperEth/Clipper'
 import { handleRedo } from '../../../../../src/mappings/modules/liquidation/clipper'
 import { saleAuctions } from '../../../../../src/entities'
 
-function createSaleAuction(id: BigInt, event: RedoEvent): void {
+function createSaleAuction(id: string, event: RedoEvent): void {
   let idStr = id.toString()
 
   event.block.timestamp = BigInt.fromI32(1)
@@ -35,17 +35,17 @@ describe('Clipper#handleRedo', () => {
         tests.helpers.params.getBigInt('coin', coin),
       ]),
     )
-
-    createSaleAuction(id, event)
+    const idStr = id.toString() + "-" + event.address.toHexString()
+    createSaleAuction(idStr, event)
 
     event.block.timestamp = BigInt.fromI32(1001)
 
     handleRedo(event)
 
-    assert.fieldEquals('SaleAuction', id.toString(), 'resetedAt', '1001')
-    assert.fieldEquals('SaleAuction', id.toString(), 'updatedAt', '1001')
-    assert.fieldEquals('SaleAuction', id.toString(), 'startedAt', '1')
-    assert.fieldEquals('SaleAuction', id.toString(), 'startingPrice', '10')
+    assert.fieldEquals('SaleAuction', idStr, 'resetedAt', '1001')
+    assert.fieldEquals('SaleAuction', idStr, 'updatedAt', '1001')
+    assert.fieldEquals('SaleAuction', idStr, 'startedAt', '1')
+    assert.fieldEquals('SaleAuction', idStr, 'startingPrice', '10')
 
     clearStore()
   })

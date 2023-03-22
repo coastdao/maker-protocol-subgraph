@@ -1,7 +1,7 @@
 import { bytes, units } from '@protofire/subgraph-toolkit'
-import { Kick, LogNote } from '../../../../generated/Flap/Flapper'
+import { Kick, LogNote } from '../../../../generated/Flapper/Flapper'
 import { auctions } from '../../../entities/auctions'
-import { system as systemModule } from '../../../entities'
+import { system as systemModule, protocolParameterChangeLogs as changeLogs } from '../../../entities'
 import { LiveChangeLog } from '../../../../generated/schema'
 import { BigInt } from '@graphprotocol/graph-ts'
 
@@ -13,10 +13,16 @@ export function handleFile(event: LogNote): void {
 
   if (what == 'beg') {
     system.surplusAuctionMinimumBidIncrease = units.fromWad(data)
+    changeLogs.createProtocolParameterChangeLog(event, "FLAP", what, "",
+      new changeLogs.ProtocolParameterValueBigDecimal(units.fromWad(data)))
   } else if (what == 'ttl') {
     system.surplusAuctionBidDuration = data
+    changeLogs.createProtocolParameterChangeLog(event, "FLAP", what, "",
+      new changeLogs.ProtocolParameterValueBigInt(data))
   } else if (what == 'tau') {
     system.surplusAuctionDuration = data
+    changeLogs.createProtocolParameterChangeLog(event, "FLAP", what, "",
+      new changeLogs.ProtocolParameterValueBigInt(data))
   }
 
   system.save()

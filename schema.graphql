@@ -231,6 +231,12 @@ type User @entity {
 
   " User's mkr approvals "
   mkrApprovals: [MkrApproval!] @derivedFrom(field: "owner")
+
+  "User's vote slates"
+  voteSlate: VoteSlate!
+
+  "User's locked maker weight for vote"
+  voteWeight: BigInt!
 }
 
 " Contract used to execute transactions and sequences of transactions on behalf of a user "
@@ -301,6 +307,10 @@ type SystemState @entity {
   #
   # Balance Sheet paramters (vow)
   #
+
+  # `flapper` and `flopper` value cannot be retrieved now because they are set in constructor.
+  # Therefore, `vowFlapperContract` and `vowFlopperContract` will be empty.
+  # see https://github.com/graphprotocol/graph-node/issues/949
 
   " Address that conforms to a FlapLike interface "
   vowFlapperContract: Bytes!
@@ -421,6 +431,10 @@ type SystemState @entity {
   " Flat fee to suck from vow to incentivize keepers (Clipper#tip) "
   saleAuctionFlatFee: BigDecimal!
 
+  # `spotter` and `dog` value cannot be retrieved now because they are set in constructor.
+  # Therefore, `saleAuctionSpotterContract` and `saleAuctionDogContract` will be empty.
+  # see https://github.com/graphprotocol/graph-node/issues/949
+
   " Spotter contract address on Clipper (Clipper#spotter) "
   saleAuctionSpotterContract: Bytes!
 
@@ -442,6 +456,14 @@ type SystemState @entity {
 
   " Per-step multiplicative factor (step) [ray]"
   multiplicatorFactorPerStep: BigDecimal!
+
+  #
+  # vote module (DSChief)
+  #
+  hat: VoteApproval
+
+  " The latest timestamp in which a system parameters was modified "
+  timestamp: BigInt!
 }
 
 interface Auction {
@@ -574,6 +596,9 @@ type Vault @entity {
 
   " Vault action history "
   logs: [VaultLog!] @derivedFrom(field: "vault")
+
+  " Safety Level: This number indicates safety level of vault. "
+  safetyLevel: BigDecimal!
 }
 
 interface VaultLog {
@@ -581,6 +606,7 @@ interface VaultLog {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 type VaultCreationLog implements VaultLog @entity {
@@ -589,6 +615,7 @@ type VaultCreationLog implements VaultLog @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 type VaultCollateralChangeLog implements VaultLog @entity {
@@ -600,6 +627,7 @@ type VaultCollateralChangeLog implements VaultLog @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 type VaultDebtChangeLog implements VaultLog @entity {
@@ -611,6 +639,7 @@ type VaultDebtChangeLog implements VaultLog @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 type VaultSplitChangeLog implements VaultLog @entity {
@@ -623,6 +652,7 @@ type VaultSplitChangeLog implements VaultLog @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 type VaultTransferChangeLog implements VaultLog @entity {
@@ -633,6 +663,7 @@ type VaultTransferChangeLog implements VaultLog @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  rate: BigDecimal!
 }
 
 interface CollateralLog {
@@ -808,7 +839,9 @@ type SaleAuction @entity {
   " User to return any excess collateral [usr in SmartContract]"
   userExcessCollateral: User!
   " User where DAI incentives will be sent [kpr in SmartContract]"
-  userIncentives: User!
+  userIncentives: User
+  " User who bids the auction"
+  userTaker: Bytes!
   " Auction inicial price [top in SmartContract]"
   startingPrice: BigDecimal!
   " Auction start time [tic in SmartContract]"
@@ -825,4 +858,226 @@ type SaleAuction @entity {
   isActive: Boolean!
   " Clipper cpntract addres "
   clipperContract: Bytes!
+}
+
+"Add more contract types if you need to"
+enum ContractType {
+  SPOT
+  VAT
+  ABACUS
+  CLIPPER
+  DOG
+  JUG
+  POT
+  FLAP
+  FLOP
+  VOW
+}
+
+"Tracks protocol parameter change by file() calls"
+interface ProtocolParameterChangeLog {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+  contractType: ContractType!
+  "human readable parameter name"
+  parameterKey1: String!
+  parameterKey2: String!
+}
+
+type ProtocolParameterChangeLogBytes implements ProtocolParameterChangeLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+  contractType: ContractType!
+  "human readable parameter name"
+  parameterKey1: String!
+  parameterKey2: String!
+  "human readable parameter value"
+  parameterValue: Bytes!
+}
+
+type ProtocolParameterChangeLogBigInt implements ProtocolParameterChangeLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+  contractType: ContractType!
+  "human readable parameter name"
+  parameterKey1: String!
+  parameterKey2: String!
+  "human readable parameter value"
+  parameterValue: BigInt!
+}
+
+type ProtocolParameterChangeLogBigDecimal implements ProtocolParameterChangeLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+  contractType: ContractType!
+  "human readable parameter name"
+  parameterKey1: String!
+  parameterKey2: String!
+  "human readable parameter value"
+  parameterValue: BigDecimal!
+}
+
+"Tracks voting logs by indexing DSChief contract calls"
+interface VoteLog {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+}
+
+type VoteLogSetDelay implements VoteLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  delay_: BigInt!
+}
+
+type VoteLogPlot  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  usr: Bytes!
+  tag: Bytes!
+  fax: Bytes!
+  eta: BigInt!
+}
+
+type VoteLogDrop  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  usr: Bytes!
+  tag: Bytes!
+  fax: Bytes!
+  eta: BigInt!
+}
+
+type VoteLogExec  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  usr: Bytes!
+  tag: Bytes!
+  fax: Bytes!
+  eta: BigInt!
+}
+
+type VoteLogVote  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  oldSlate: VoteSlate
+  newSlate: VoteSlate
+}
+
+type VoteLogLaunch  implements VoteLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+}
+
+type VoteLogLock  implements VoteLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  wad: BigInt!
+}
+
+type VoteLogFree  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  wad: BigInt!
+}
+
+type VoteLogEtch  implements VoteLog @entity{
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  sender: User
+  yays: [Bytes!]
+}
+
+type VoteLogLift  implements VoteLog @entity {
+  id: ID!
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+
+  hat: VoteApproval
+  oldHat: VoteApproval
+  sender: User
+}
+
+type VoteApproval @entity {
+  "candidate address and its weighted vote sum. id is address."
+  id: ID!
+  "same as id."
+  address: Bytes!
+  "weighted vote sum"
+  approvals: BigInt!
+}
+
+type VoteSlate @entity {
+  "combination of candidate address list. id is unique hash value."
+  id: ID!
+  "same as id."
+  slate: Bytes!
+  "address list"
+  addresses: [Bytes!]!
+}
+
+type ChainLog @entity {
+  "chainlog capital contract name as in https://chainlog.makerdao.com/"
+  id: ID!
+  "contract address"
+  address: Bytes!
+  "version of contract"
+  version: String
 }

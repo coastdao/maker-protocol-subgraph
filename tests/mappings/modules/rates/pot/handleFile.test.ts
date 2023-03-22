@@ -3,6 +3,8 @@ import { test, clearStore, assert, describe, beforeEach } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Pot/Pot'
 import { handleFile } from '../../../../../src/mappings/modules/rates/pot'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function strRadToBytes(value: string): Bytes {
   return Bytes.fromUint8Array(Bytes.fromBigInt(BigInt.fromString(value)).reverse())
@@ -44,6 +46,12 @@ describe('Pot#handleFile', () => {
 
       assert.fieldEquals('SystemState', 'current', 'savingsRate', '10')
 
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "POT")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "10")
+
       clearStore()
     })
   })
@@ -58,6 +66,13 @@ describe('Pot#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'potVowContract', data)
+
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'contractType', "POT")
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterValue', data)
+
 
       clearStore()
     })

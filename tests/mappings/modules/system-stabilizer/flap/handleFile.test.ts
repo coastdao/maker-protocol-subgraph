@@ -3,6 +3,8 @@ import { test, clearStore, describe, assert } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Flap/Flapper'
 import { handleFile } from '../../../../../src/mappings/modules/system-stabilizer/flap'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(what: string, data: string): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x1a0b287e'))
@@ -27,6 +29,11 @@ describe('Flapper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'surplusAuctionMinimumBidIncrease', '100')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "FLAP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "100")
 
       clearStore()
     })
@@ -42,6 +49,11 @@ describe('Flapper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'surplusAuctionBidDuration', '60')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "FLAP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "60")
 
       clearStore()
     })
@@ -57,6 +69,11 @@ describe('Flapper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'surplusAuctionDuration', '120')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "FLAP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "120")
 
       clearStore()
     })

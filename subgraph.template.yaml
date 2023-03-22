@@ -1,0 +1,810 @@
+description: Multi Collateral Dai (MCD)
+specVersion: 0.0.4
+
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  #
+  # Core Module
+  #
+
+  # Vault Engine
+  - name: Vat
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Vat
+      address: '{{ Vat.address }}'
+      startBlock: {{ Vat.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/core/vat.ts
+      abis:
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+        - UserProxy
+        - Vault
+      eventHandlers:
+        ### Administration ###
+        # function init(bytes32 ilk)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
+          handler: handleInit
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function cage()
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+        ### Fungibility ###
+        # function slip(bytes32 ilk, address usr, int256 wad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7cdd3fde00000000000000000000000000000000000000000000000000000000'
+          handler: handleSlip
+
+        # function flux(bytes32 ilk, address src, address dst, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6111be2e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFlux
+
+        # function move(address src, address dst, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xbb35783b00000000000000000000000000000000000000000000000000000000'
+          handler: handleMove
+
+        ### CDP Manipulation ###
+        # function frob(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7608870300000000000000000000000000000000000000000000000000000000'
+          handler: handleFrob
+
+        ### CDP Fungibility ###
+        # function fork(bytes32 ilk, address src, address dst, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x870c616d00000000000000000000000000000000000000000000000000000000'
+          handler: handleFork
+
+        ### CDP Confiscation ###
+        # function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7bab3f4000000000000000000000000000000000000000000000000000000000'
+          handler: handleGrab
+
+        ### Settlement ###
+        # function heal(uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xf37ac61c00000000000000000000000000000000000000000000000000000000'
+          handler: handleHeal
+
+        # function suck(address u, address v, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xf24e23eb00000000000000000000000000000000000000000000000000000000'
+          handler: handleSuck
+
+        ### Rates ###
+        # function fold(bytes32 i, address u, int256 rate)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xb65337df00000000000000000000000000000000000000000000000000000000'
+          handler: handleFold
+
+  #  Liaison between the oracles and core contracts
+  - name: Spotter
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Spotter
+      address: '{{ Spotter.address }}'
+      startBlock: {{ Spotter.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/core/spot.ts
+      abis:
+        - name: Spotter
+          file: ./abis/Spotter.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralPrice
+        - CollateralType
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+        # file(bytes32 ilk, bytes32 what, address pip_)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xebecb39d00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+
+        # file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Update value ###
+        # event Poke(bytes32 ilk, bytes32 val, uint256 spot)
+        - event: Poke(bytes32,bytes32,uint256)
+          handler: handlePoke
+
+        # function cage()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+  #
+  # System Stabilizer Module
+  #
+
+  # Surplus Auction
+  - name: Flapper
+    kind: ethereum/contract
+    network:  {{ network }}
+    source:
+      abi: Flapper
+      address: '{{ Flapper.address }}'
+      startBlock: {{ Flapper.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/flap.ts
+      abis:
+        - name: Flapper
+          file: ./abis/Flapper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - SurplusAuction
+      eventHandlers:
+        ### Admin ###
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function cage(uint256 rad)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xa2f91af200000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+        ### Auction ###
+        # event Kick (uint256 id, uint256 lot, uint256 bid)
+        - event: Kick(uint256,uint256,uint256)
+          handler: handleKick
+
+        # function tick(uint256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xfc7b6aee00000000000000000000000000000000000000000000000000000000'
+          handler: handleTick
+
+        # function deal(uint256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xc959c42b00000000000000000000000000000000000000000000000000000000'
+          handler: handleDeal
+
+        # function tend(uint256 id, uint256 bid)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x4712f80300000000000000000000000000000000000000000000000000000000'
+          handler: handleTend
+
+        # function yank(uint256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x26e027f100000000000000000000000000000000000000000000000000000000'
+          handler: handleYank
+
+  #  Liquidation Module
+  - name: Dog
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Dog
+      address: '{{ Dog.address }}'
+      startBlock: {{ Dog.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/liquidation/dog.ts
+      abis:
+        - name: Dog
+          file: ./abis/Dog.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - LiveChangeLog
+        - CollateralType
+        - SystemState
+      eventHandlers:
+
+        - event: Cage()
+          handler: handleCage
+
+        - event: Digs(indexed bytes32,uint256)
+          handler: handleDigs
+
+        - event: Bark(indexed bytes32,indexed address,uint256,uint256,uint256,address,indexed uint256)
+          handler: handleBark
+        ### Administration ###
+        - event: File(indexed bytes32,address)
+          handler: handleFileVow
+
+        - event: File(indexed bytes32,indexed bytes32,address)
+          handler: handleFileClip
+
+        - event: File(indexed bytes32,indexed bytes32,uint256)
+          handler: handleFileChop
+
+        - event: File(indexed bytes32,uint256)
+          handler: handleFileHole
+
+  # Debt Auction
+  - name: Flopper
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Flopper
+      address: '{{ Flopper.address }}'
+      startBlock: {{ Flopper.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/flop.ts
+      abis:
+        - name: Flopper
+          file: ./abis/Flopper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - DebtAuction
+      eventHandlers:
+        ### Admin ###
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Auction ###
+        - event: Kick(uint256,uint256,uint256,indexed address)
+          handler: handleKick
+
+        # function tick(uint256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xfc7b6aee00000000000000000000000000000000000000000000000000000000'
+          handler: handleTick
+
+        # function deal(uint256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xc959c42b00000000000000000000000000000000000000000000000000000000'
+          handler: handleDeal
+
+        ### Shutdown ###
+        # function cage()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+        # function yank(unit256 id)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x26e027f100000000000000000000000000000000000000000000000000000000'
+          handler: handleYank
+
+        # function dent(uint256 id, uint256 lot, uint256 bid)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x5ff3a38200000000000000000000000000000000000000000000000000000000'
+          handler: handleDent
+
+  # Balance Sheet
+  - name: Vow
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Vow
+      address: '{{ Vow.address }}'
+      startBlock: {{ Vow.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/vow.ts
+      abis:
+        - name: Vow
+          file: ./abis/Vow.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 what, address data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xd4e8be8300000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function cage()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+        ### Pop from debt-queue
+        # function flog(uint era)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xd7ee674b00000000000000000000000000000000000000000000000000000000'
+          handler: handleFlog
+
+        ### Push to debt-queue ###
+        # function fess(uint tab)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x697efb7800000000000000000000000000000000000000000000000000000000'
+          handler: handleFess
+
+        # function flap()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x0e01198b00000000000000000000000000000000000000000000000000000000'
+          handler: handleFlap
+
+        # function flop()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xbbbb0d7b00000000000000000000000000000000000000000000000000000000'
+          handler: handleFlop
+
+        # function kiss(uint rad)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x2506855a00000000000000000000000000000000000000000000000000000000'
+          handler: handleKiss
+
+  #
+  # Rates Module
+  #
+
+  # Accumulation of Stability Fees for collateral types
+  - name: Jug
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Jug
+      address: '{{ Jug.address }}'
+      startBlock:  {{ Jug.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/rates/jug.ts
+      abis:
+        - name: Jug
+          file: ./abis/Jug.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+        # init(bytes32 ilk)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
+          handler: handleInit
+
+        # function file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 what, address data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xd4e8be8300000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Stability Fee Collection ###
+        # function drip(bytes32 ilk)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x44e2a5a800000000000000000000000000000000000000000000000000000000'
+          handler: handleDrip
+
+  # Dai Savings Rate
+  - name: Pot
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Pot
+      address: '{{ Pot.address }}'
+      startBlock: {{ Pot.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/rates/pot.ts
+      abis:
+        - name: Pot
+          file: ./abis/Pot.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function cage()
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
+          handler: handleCage
+
+        # function file(bytes32 what, address addr)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xd4e8be8300000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function join(uint wad)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x049878f300000000000000000000000000000000000000000000000000000000'
+          handler: handleJoin
+
+        # function exit(uint wad)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7f8661a100000000000000000000000000000000000000000000000000000000'
+          handler: handleExit
+
+        # function drip(uint tab)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x58326b7a00000000000000000000000000000000000000000000000000000000'
+          handler: handleDrip
+
+  #
+  # MKR Module
+  #
+
+  # Mkr
+  - name: DSToken
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: DSToken
+      address: '{{ DSToken.address }}'
+      startBlock: {{ DSToken.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/mkr/dsToken.ts
+      abis:
+        - name: DSToken
+          file: ./abis/DSToken.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - User
+        - MkrTransfer
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: Mint(indexed address,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256)
+          handler: handleBurn
+
+  #
+  # Proxy Module
+  #
+
+  # Used to deploy new user proxy instances
+  - name: DSProxyFactory
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: DSProxyFactory
+      address: '{{ DSProxyFactory.address }}'
+      startBlock: {{ DSProxyFactory.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/proxy/proxy-factory.ts
+      abis:
+        - name: DSProxyFactory
+          file: ./abis/DSProxyFactory.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - User
+        - UserProxy
+      eventHandlers:
+        - event: Created(indexed address,indexed address,address,address)
+          handler: handleCreated
+
+  # Allow users to interact with their Vaults in an easy way, treating them as non-fungible tokens (NFTs)
+  - name: CdpManager
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: DssCdpManager
+      address: '{{ DssCdpManager.address }}'
+      startBlock: {{ DssCdpManager.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/proxy/cdp-manager.ts
+      abis:
+        - name: DssCdpManager
+          file: ./abis/DssCdpManager.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+        - UserProxy
+        - Vault
+      eventHandlers:
+        # function open(bytes32 ilk, address usr)
+        - event: NewCdp(indexed address,indexed address,indexed uint256)
+          handler: handleOpen
+
+        # function give(uint cdp, address dst)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xfcafcc6800000000000000000000000000000000000000000000000000000000'
+          handler: handleGive
+
+  #
+  # DAI Module
+  #
+  - name: Dai
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      address:  '{{ Dai.address }}'
+      abi: Dai
+      startBlock: {{ Dai.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/dai/dai.ts
+      entities:
+        - Approval
+        - Transfer
+        - SystemState
+      abis:
+        - name: Dai
+          file: ./abis/Dai.json
+        - name: Vat
+          file: ./abis/Vat.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+  #
+  # Liquidation Module
+  #
+  # Auction Initiation from Liquidation
+  - name: Clipper
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: Clipper
+      address: '{{ Clipper.address }}'
+      startBlock: {{ Clipper.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/liquidation/clipper.ts
+      abis:
+        - name: Clipper
+          file: ./abis/Clipper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - SaleAuction
+      eventHandlers:
+        - event: File(indexed bytes32,uint256)
+          handler: handleFile1
+
+        - event: File(indexed bytes32,address)
+          handler: handleFile2
+
+        - event: Kick(indexed uint256,uint256,uint256,uint256,indexed address,indexed address,uint256)
+          handler: handleKick
+
+        - event: Redo(indexed uint256,uint256,uint256,uint256,indexed address,indexed address,uint256)
+          handler: handleRedo
+
+        - event: Take(indexed uint256,uint256,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleTake
+
+        - event: Yank(uint256)
+          handler: handleYank
+
+  #
+  # Liquidation Module
+  #
+  # Auction Initiation from Liquidation
+  - name: StairstepExponentialDecrease
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: StairstepExponentialDecrease
+      address: '{{ StairstepExponentialDecrease.address }}'
+      startBlock:  {{ StairstepExponentialDecrease.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/liquidation/abacus.ts
+      abis:
+        - name: StairstepExponentialDecrease
+          file: ./abis/StairstepExponentialDecrease.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        - event: File(indexed bytes32,uint256)
+          handler: handleFile
+
+  #
+  # DSChief Vote Module
+  #
+  # Count votes and bookkeeping suggestions
+  - name: DSChief
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: DSChief
+      address: '{{ DSChief.address }}'
+      startBlock: {{ DSChief.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/vote/dsChief.ts
+      abis:
+        - name: DSChief
+          file: ./abis/DSChief.json
+        - name: Vat
+          file: ./abis/Vat.json
+
+      entities:
+        - VoteLog
+        - VoteSlate
+        - VoteApproval
+        - VoteLogEtch
+        - VoteLogFree
+        - VoteLogLaunch
+        - VoteLogLift
+        - VoteLogLock
+        - VoteLogVote
+      eventHandlers:
+        # calculated by https://www.evm-function-selector.click/
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xa69beaba00000000000000000000000000000000000000000000000000000000'
+          handler: handleVote # function vote(byte32) -> 0xa69beaba
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x01339c2100000000000000000000000000000000000000000000000000000000'
+          handler: handleLaunch
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xdd46706400000000000000000000000000000000000000000000000000000000'
+          handler: handleLock
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xd8ccd0f300000000000000000000000000000000000000000000000000000000'
+          handler: handleFree
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x5123e1fa00000000000000000000000000000000000000000000000000000000'
+          handler: handleEtch # function etch(address[]) -> 0x5123e1fa
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x3c278bd500000000000000000000000000000000000000000000000000000000'
+          handler: handleLift
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xed08132900000000000000000000000000000000000000000000000000000000'
+          handler: handleEtchAndVote # function vote(address[] memory yays)
+
+  #
+  # DSPause Vote Module
+  #
+  # Count votes and bookkeeping suggestions
+  - name: DSPause
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: DSPause
+      address: '{{ DSPause.address }}'
+      startBlock: {{ DSPause.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/vote/dsPause.ts
+      abis:
+        - name: DSPause
+          file: ./abis/DSPause.json
+        - name: Vat
+          file: ./abis/Vat.json
+
+      entities:
+        - VoteLog
+        - VoteState
+      eventHandlers:
+        # calculated by https://www.evm-function-selector.click/
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xe177246e00000000000000000000000000000000000000000000000000000000'
+          handler: handleSetDelay
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x46d2fbbb00000000000000000000000000000000000000000000000000000000'
+          handler: handlePlot
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x162c7de300000000000000000000000000000000000000000000000000000000'
+          handler: handleDrop
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x168ccd6700000000000000000000000000000000000000000000000000000000'
+          handler: handleExec
+
+  #
+  # ChainLog Module
+  #
+  # Keeps track of all related addresses in system
+  - name: ChainLog
+    kind: ethereum/contract
+    network: {{ network }}
+    source:
+      abi: ChainLog
+      address: '{{ ChainLog.address }}'
+      startBlock: {{ ChainLog.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/log/chainLog.ts
+      abis:
+        - name: ChainLog
+          file: ./abis/ChainLog.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - ChainLog
+      eventHandlers:
+        - event: UpdateAddress(bytes32,address)
+          handler: handleUpdateAddress

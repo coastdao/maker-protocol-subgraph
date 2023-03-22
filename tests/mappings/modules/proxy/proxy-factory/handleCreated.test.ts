@@ -1,10 +1,12 @@
 import { BigInt, Address } from '@graphprotocol/graph-ts'
 import { describe, test, assert, clearStore } from 'matchstick-as'
-import { Created } from '../../../../../generated/ProxyFactory/DSProxyFactory'
+import { Created } from '../../../../../generated/DSProxyFactory/DSProxyFactory'
 import { handleCreated } from '../../../../../src/mappings/modules/proxy/proxy-factory'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { users } from '../../../../../src/entities'
 import { system as systemModule } from '../../../../../src/entities'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('DSProxyFactory#handleCreated', () => {
   test('Creates UserProxy entity and updates its fields. Updates the SystemState#userProxyCount and the User#proxyCount fields', () => {

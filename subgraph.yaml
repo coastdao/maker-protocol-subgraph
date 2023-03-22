@@ -12,11 +12,11 @@ dataSources:
   # Vault Engine
   - name: Vat
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Vat
-      address: '0x35d1b3f3d7966a1dfe207aa4514c12a259a0492b'
-      startBlock: 8928152
+      address: '0xbA7793d31c86d4580d84b03Ab0F84f8375Da2ef6'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -32,7 +32,6 @@ dataSources:
         - Vault
       eventHandlers:
         ### Administration ###
-
         # function init(bytes32 ilk)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
@@ -54,7 +53,6 @@ dataSources:
           handler: handleCage
 
         ### Fungibility ###
-
         # function slip(bytes32 ilk, address usr, int256 wad)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x7cdd3fde00000000000000000000000000000000000000000000000000000000'
@@ -71,28 +69,24 @@ dataSources:
           handler: handleMove
 
         ### CDP Manipulation ###
-
         # function frob(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x7608870300000000000000000000000000000000000000000000000000000000'
           handler: handleFrob
 
         ### CDP Fungibility ###
-
         # function fork(bytes32 ilk, address src, address dst, int256 dink, int256 dart)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x870c616d00000000000000000000000000000000000000000000000000000000'
           handler: handleFork
 
         ### CDP Confiscation ###
-
         # function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x7bab3f4000000000000000000000000000000000000000000000000000000000'
           handler: handleGrab
 
         ### Settlement ###
-
         # function heal(uint256 rad)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0xf37ac61c00000000000000000000000000000000000000000000000000000000'
@@ -104,20 +98,19 @@ dataSources:
           handler: handleSuck
 
         ### Rates ###
-
         # function fold(bytes32 i, address u, int256 rate)
         - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
           topic0: '0xb65337df00000000000000000000000000000000000000000000000000000000'
           handler: handleFold
 
   #  Liaison between the oracles and core contracts
-  - name: Spot
+  - name: Spotter
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Spotter
-      address: '0x65c79fcb50ca1594b025960e539ed7a9a6d434a3'
-      startBlock: 8928152
+      address: '0x7D8aF5f8e3455190FB59B7675739de6366fe419f'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -134,11 +127,11 @@ dataSources:
         - SystemState
       eventHandlers:
         ### Administration ###
-
         # file(bytes32 ilk, bytes32 what, address pip_)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0xebecb39d00000000000000000000000000000000000000000000000000000000'
           handler: handleFile
+
 
         # file(bytes32 what, uint256 data)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
@@ -151,7 +144,6 @@ dataSources:
           handler: handleFile
 
         ### Update value ###
-
         # event Poke(bytes32 ilk, bytes32 val, uint256 spot)
         - event: Poke(bytes32,bytes32,uint256)
           handler: handlePoke
@@ -166,13 +158,13 @@ dataSources:
   #
 
   # Surplus Auction
-  - name: Flap
+  - name: Flapper
     kind: ethereum/contract
-    network: mainnet
+    network:  testnet
     source:
       abi: Flapper
-      address: '0xdfe0fb1be2a52cdbf8fb962d5701d7fd0902db9f'
-      startBlock: 8928163
+      address: '0x61534B24aF3CC804E37963F70FD2ea38eBE60891'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -188,7 +180,6 @@ dataSources:
         - SurplusAuction
       eventHandlers:
         ### Admin ###
-
         # function file(bytes32 what, uint256 data)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
@@ -200,7 +191,6 @@ dataSources:
           handler: handleCage
 
         ### Auction ###
-
         # event Kick (uint256 id, uint256 lot, uint256 bid)
         - event: Kick(uint256,uint256,uint256)
           handler: handleKick
@@ -228,11 +218,11 @@ dataSources:
   #  Liquidation Module
   - name: Dog
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Dog
-      address: '0x135954d155898D42C90D2a57824C690e0c7BEf1B'
-      startBlock: 12246358
+      address: '0xA5E1fDc447C58FCF654Ce69d34665deE2D5b3A96'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -249,31 +239,36 @@ dataSources:
         - CollateralType
         - SystemState
       eventHandlers:
+
         - event: Cage()
           handler: handleCage
+
         - event: Digs(indexed bytes32,uint256)
           handler: handleDigs
+
         - event: Bark(indexed bytes32,indexed address,uint256,uint256,uint256,address,indexed uint256)
           handler: handleBark
         ### Administration ###
-
         - event: File(indexed bytes32,address)
           handler: handleFileVow
+
         - event: File(indexed bytes32,indexed bytes32,address)
           handler: handleFileClip
+
         - event: File(indexed bytes32,indexed bytes32,uint256)
           handler: handleFileChop
+
         - event: File(indexed bytes32,uint256)
           handler: handleFileHole
 
   # Debt Auction
-  - name: Flop
+  - name: Flopper
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Flopper
-      address: '0x4d95a049d5b0b7d32058cd3f2163015747522e99'
-      startBlock: 9006717
+      address: '0xC7216Da4dffA521a2D7C83d2dCcaC9142639a1aC'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -289,14 +284,12 @@ dataSources:
         - DebtAuction
       eventHandlers:
         ### Admin ###
-
         # function file(bytes32 what, uint256 data)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
           handler: handleFile
 
         ### Auction ###
-
         - event: Kick(uint256,uint256,uint256,indexed address)
           handler: handleKick
 
@@ -311,7 +304,6 @@ dataSources:
           handler: handleDeal
 
         ### Shutdown ###
-
         # function cage()
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x6924500900000000000000000000000000000000000000000000000000000000'
@@ -330,11 +322,11 @@ dataSources:
   # Balance Sheet
   - name: Vow
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Vow
-      address: '0xa950524441892a31ebddf91d3ceefa04bf454466'
-      startBlock: 8928163
+      address: '0x078f0A07eDd42b0bAb33C76Eeb9b676545830ecc'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -349,7 +341,6 @@ dataSources:
         - SystemState
       eventHandlers:
         ### Administration ###
-
         # function file(bytes32 what, uint256 data)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
@@ -366,14 +357,12 @@ dataSources:
           handler: handleCage
 
         ### Pop from debt-queue
-
         # function flog(uint era)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0xd7ee674b00000000000000000000000000000000000000000000000000000000'
           handler: handleFlog
 
         ### Push to debt-queue ###
-
         # function fess(uint tab)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x697efb7800000000000000000000000000000000000000000000000000000000'
@@ -401,11 +390,11 @@ dataSources:
   # Accumulation of Stability Fees for collateral types
   - name: Jug
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Jug
-      address: '0x19c0976f590d67707e62397c87829d896dc0f1f1'
-      startBlock: 8928160
+      address: '0x2bcfF42737192ba3e7691776dA91E0c40BF55228'
+      startBlock:  8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -421,7 +410,6 @@ dataSources:
         - SystemState
       eventHandlers:
         ### Administration ###
-
         # init(bytes32 ilk)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
@@ -443,7 +431,6 @@ dataSources:
           handler: handleFile
 
         ### Stability Fee Collection ###
-
         # function drip(bytes32 ilk)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x44e2a5a800000000000000000000000000000000000000000000000000000000'
@@ -452,11 +439,11 @@ dataSources:
   # Dai Savings Rate
   - name: Pot
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Pot
-      address: '0x197e90f9fad81970ba7976f33cbd77088e5d7cf7'
-      startBlock: 8928160
+      address: '0x44dA90165e80712f5a22D7bE67AfCBedA89B9ff2'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -471,7 +458,6 @@ dataSources:
         - SystemState
       eventHandlers:
         ### Administration ###
-
         # function file(bytes32 what, uint256 data)
         - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
           topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
@@ -509,11 +495,11 @@ dataSources:
   # Mkr
   - name: DSToken
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: DSToken
-      address: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2'
-      startBlock: 12805415
+      address: '0x75ADAFAE6ED7f675d9fc36E13C88370c477D3a62'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -543,13 +529,13 @@ dataSources:
   #
 
   # Used to deploy new user proxy instances
-  - name: ProxyFactory
+  - name: DSProxyFactory
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: DSProxyFactory
-      address: '0xa26e15c895efc0616177b7c1e7270a4c7d51c997'
-      startBlock: 5834580
+      address: '0xFbF2f08f3e9978Feca854d255B69CC6DDAEb1BA3'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -571,11 +557,11 @@ dataSources:
   # Allow users to interact with their Vaults in an easy way, treating them as non-fungible tokens (NFTs)
   - name: CdpManager
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: DssCdpManager
-      address: '0x5ef30b9986345249bc32d8928b7ee64de9435e39'
-      startBlock: 8928198
+      address: '0xA69d04048c6B4e1bB9E08985503a6bA21550C75e'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -606,11 +592,11 @@ dataSources:
   #
   - name: Dai
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
-      address: '0x6b175474e89094c44da98b954eedeac495271d0f'
+      address:  '0xd8Fc74A40aA21D506AE3b9326697290990Dce76A'
       abi: Dai
-      startBlock: 8928158
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -636,11 +622,11 @@ dataSources:
   # Auction Initiation from Liquidation
   - name: Clipper
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: Clipper
-      address: '0xc67963a226eddd77B91aD8c421630A1b0AdFF270'
-      startBlock: 12329686
+      address: '0x96455C67C5011bEEcD79311bE69EFd53A9686791'
+      startBlock: 8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -657,14 +643,19 @@ dataSources:
       eventHandlers:
         - event: File(indexed bytes32,uint256)
           handler: handleFile1
+
         - event: File(indexed bytes32,address)
           handler: handleFile2
+
         - event: Kick(indexed uint256,uint256,uint256,uint256,indexed address,indexed address,uint256)
           handler: handleKick
+
         - event: Redo(indexed uint256,uint256,uint256,uint256,indexed address,indexed address,uint256)
           handler: handleRedo
+
         - event: Take(indexed uint256,uint256,uint256,uint256,uint256,uint256,indexed address)
           handler: handleTake
+
         - event: Yank(uint256)
           handler: handleYank
 
@@ -674,11 +665,11 @@ dataSources:
   # Auction Initiation from Liquidation
   - name: StairstepExponentialDecrease
     kind: ethereum/contract
-    network: mainnet
+    network: testnet
     source:
       abi: StairstepExponentialDecrease
-      address: '0x7d9f92DAa9254Bbd1f479DBE5058f74C2381A898'
-      startBlock: 12329765
+      address: '0x98B634c80824e7d607FEAE1681556F516dbd25C4'
+      startBlock:  8269000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -694,3 +685,126 @@ dataSources:
       eventHandlers:
         - event: File(indexed bytes32,uint256)
           handler: handleFile
+
+  #
+  # DSChief Vote Module
+  #
+  # Count votes and bookkeeping suggestions
+  - name: DSChief
+    kind: ethereum/contract
+    network: testnet
+    source:
+      abi: DSChief
+      address: '0xabB266748eE0921Fee99dDfF475fe180fF64b2FD'
+      startBlock: 8269000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/vote/dsChief.ts
+      abis:
+        - name: DSChief
+          file: ./abis/DSChief.json
+        - name: Vat
+          file: ./abis/Vat.json
+
+      entities:
+        - VoteLog
+        - VoteSlate
+        - VoteApproval
+        - VoteLogEtch
+        - VoteLogFree
+        - VoteLogLaunch
+        - VoteLogLift
+        - VoteLogLock
+        - VoteLogVote
+      eventHandlers:
+        # calculated by https://www.evm-function-selector.click/
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xa69beaba00000000000000000000000000000000000000000000000000000000'
+          handler: handleVote # function vote(byte32) -> 0xa69beaba
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x01339c2100000000000000000000000000000000000000000000000000000000'
+          handler: handleLaunch
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xdd46706400000000000000000000000000000000000000000000000000000000'
+          handler: handleLock
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xd8ccd0f300000000000000000000000000000000000000000000000000000000'
+          handler: handleFree
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x5123e1fa00000000000000000000000000000000000000000000000000000000'
+          handler: handleEtch # function etch(address[]) -> 0x5123e1fa
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x3c278bd500000000000000000000000000000000000000000000000000000000'
+          handler: handleLift
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xed08132900000000000000000000000000000000000000000000000000000000'
+          handler: handleEtchAndVote # function vote(address[] memory yays)
+
+  #
+  # DSPause Vote Module
+  #
+  # Count votes and bookkeeping suggestions
+  - name: DSPause
+    kind: ethereum/contract
+    network: testnet
+    source:
+      abi: DSPause
+      address: '0x26B2EAFA06B0CB2879f8CDDBf7069508b041aA06'
+      startBlock: 8269000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/vote/dsPause.ts
+      abis:
+        - name: DSPause
+          file: ./abis/DSPause.json
+        - name: Vat
+          file: ./abis/Vat.json
+
+      entities:
+        - VoteLog
+        - VoteState
+      eventHandlers:
+        # calculated by https://www.evm-function-selector.click/
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0xe177246e00000000000000000000000000000000000000000000000000000000'
+          handler: handleSetDelay
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x46d2fbbb00000000000000000000000000000000000000000000000000000000'
+          handler: handlePlot
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x162c7de300000000000000000000000000000000000000000000000000000000'
+          handler: handleDrop
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,uint256,bytes)
+          topic0: '0x168ccd6700000000000000000000000000000000000000000000000000000000'
+          handler: handleExec
+
+  #
+  # ChainLog Module
+  #
+  # Keeps track of all related addresses in system
+  - name: ChainLog
+    kind: ethereum/contract
+    network: testnet
+    source:
+      abi: ChainLog
+      address: '0x060361951aDa5365C06B7cB87D46B325747Da10D'
+      startBlock: 8269000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/log/chainLog.ts
+      abis:
+        - name: ChainLog
+          file: ./abis/ChainLog.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - ChainLog
+      eventHandlers:
+        - event: UpdateAddress(bytes32,address)
+          handler: handleUpdateAddress

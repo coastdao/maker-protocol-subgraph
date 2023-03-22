@@ -4,6 +4,8 @@ import { handleTransfer } from '../../../../src/mappings/modules/dai/dai'
 import { tests } from '../../../../src/mappings/modules/tests'
 import { system as systemModule, users } from '../../../../src/entities'
 import { Transfer as TransferEvent } from '../../../../generated/Dai/Dai'
+import { mockCommon } from '../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(src: Address, dst: Address, wad: BigInt): TransferEvent {
   return changetype<TransferEvent>(

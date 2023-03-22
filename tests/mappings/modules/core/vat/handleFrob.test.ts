@@ -1,10 +1,12 @@
 import { Bytes, BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
-import { decimal, integer } from '@protofire/subgraph-toolkit'
+import { integer } from '@protofire/subgraph-toolkit'
 import { test, assert, clearStore, describe, afterEach, beforeEach } from 'matchstick-as'
-import { CollateralType, Vault } from '../../../../../generated/schema'
+import { CollateralPrice, CollateralType, SystemState, Vault } from '../../../../../generated/schema'
 import { LogNote } from '../../../../../generated/Vat/Vat'
 import { handleFrob } from '../../../../../src/mappings/modules/core/vat'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(
   signature: string,
@@ -36,6 +38,9 @@ function createEvent(
 let signature = '0x1a0b287e'
 let collateralTypeId: string
 let collateralType: CollateralType
+let collateralPriceId: string
+let collateralPrice: CollateralPrice
+let systemState: SystemState
 let vaultId: string
 let vault: Vault
 let urnId: string
@@ -48,8 +53,16 @@ describe('Vat#handleFrob', () => {
   describe('when collateralType exist', () => {
     beforeEach(() => {
       collateralTypeId = 'c1'
+      collateralPriceId = "1-" + collateralTypeId
+
+      collateralPrice = new CollateralPrice(collateralPriceId)
+      collateralPrice.collateral = collateralTypeId
+      collateralPrice.value = BigDecimal.fromString('150')
+      collateralPrice.save()
+
       collateralType = new CollateralType(collateralTypeId)
       collateralType.rate = BigDecimal.fromString('1.5')
+      collateralType.price = collateralPriceId
       collateralType.save()
     })
 
@@ -61,6 +74,17 @@ describe('Vat#handleFrob', () => {
         vault.collateral = BigDecimal.fromString('1000.30')
         vault.debt = BigDecimal.fromString('50.5')
         vault.save()
+
+        // vault is added, so vaultCount is one
+        systemState = new SystemState("current")
+        systemState.vaultCount = integer.ONE
+        systemState.unmanagedVaultCount = integer.ZERO
+        systemState.save()
+
+        // collateral type
+        collateralType.vaultCount = integer.ONE
+        collateralType.unmanagedVaultCount = integer.ZERO
+        collateralType.save()
       })
 
       test('updates both', () => {
@@ -92,6 +116,21 @@ describe('Vat#handleFrob', () => {
         assert.fieldEquals('Vault', vaultId, 'updatedAtBlock', event.block.number.toString())
         assert.fieldEquals('Vault', vaultId, 'updatedAtTransaction', event.transaction.hash.toHexString())
 
+        // calculate safety level index
+        const vaultOldCollateralizationRatio = vault.collateral.times(collateralPrice.value)
+          .div(vault.debt.times(collateralType.rate))
+        const vaultNewCollateralizationRatio = vault.collateral.plus(BigDecimal.fromString('100.5')).times(collateralPrice.value)
+          .div(vault.debt.plus(BigDecimal.fromString('200.5')).times(collateralType.rate))
+        const ΔsafetyLevel = vaultNewCollateralizationRatio
+          .minus(collateralType.liquidationRatio)
+          .div(vaultOldCollateralizationRatio.minus(collateralType.liquidationRatio))
+
+        assert.fieldEquals('Vault', vaultId, 'safetyLevel', vault.safetyLevel
+          .plus(
+            ΔsafetyLevel
+          )
+          .toString())
+
         // test CollateralType updates
         assert.fieldEquals(
           'CollateralType',
@@ -116,6 +155,23 @@ describe('Vat#handleFrob', () => {
 
         assert.fieldEquals('User', w, 'totalVaultDai', '300.75')
         assert.fieldEquals('Collateral', collateralId, 'amount', '-100.5')
+
+        // system state, collateralType has not increased because it already exists
+        // also user vault count should be checked ideally
+        assert.fieldEquals('CollateralType', collateralTypeId, 'vaultCount', '1')
+        assert.fieldEquals('CollateralType', collateralTypeId, 'unmanagedVaultCount', '0')
+        assert.fieldEquals('SystemState', "current", 'vaultCount', '1')
+        assert.fieldEquals('SystemState', "current", 'unmanagedVaultCount', '0')
+
+        // VaultCreationLog is not created
+        const vaultCreationLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-0';
+        assert.notInStore('VaultCreationLog', vaultCreationLogId)
+        // vaultCollateralChangeLog is created
+        const vaultCollateralChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-1';
+        assert.fieldEquals('VaultCollateralChangeLog', vaultCollateralChangeLogId, 'collateralDiff', '100.5')
+        // vaultDebtChangeLog is created
+        const vaultDebtChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-2';
+        assert.fieldEquals('VaultDebtChangeLog', vaultDebtChangeLogId, 'debtDiff', '200.5')
       })
     })
 
@@ -137,8 +193,8 @@ describe('Vat#handleFrob', () => {
 
         // test vault created from collateralType
         assert.fieldEquals('Vault', vaultId, 'collateralType', collateralTypeId)
-        assert.fieldEquals('Vault', vaultId, 'collateral', decimal.ZERO.toString())
-        assert.fieldEquals('Vault', vaultId, 'debt', decimal.ZERO.toString())
+        assert.fieldEquals('Vault', vaultId, 'collateral', "100.5")
+        assert.fieldEquals('Vault', vaultId, 'debt', "200.5")
         assert.fieldEquals('Vault', vaultId, 'owner', urnId)
         assert.fieldEquals('Vault', vaultId, 'handler', urnId)
         assert.fieldEquals('Vault', vaultId, 'openedAt', event.block.timestamp.toString())
@@ -166,7 +222,22 @@ describe('Vat#handleFrob', () => {
             .times(collateralType.rate)
             .toString(),
         )
-        assert.fieldEquals('CollateralType', collateralTypeId, 'unmanagedVaultCount', integer.ONE.toString())
+        // system state, collateralType has increased because it does not exist
+        // also user vault count should be checked ideally
+        assert.fieldEquals('CollateralType', collateralTypeId, 'vaultCount', '0')
+        assert.fieldEquals('CollateralType', collateralTypeId, 'unmanagedVaultCount', '1')
+        assert.fieldEquals('SystemState', "current", 'vaultCount', '0')
+        assert.fieldEquals('SystemState', "current", 'unmanagedVaultCount', '1')
+
+        // VaultCreationLog is created
+        const vaultCreationLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-0';
+        assert.fieldEquals('VaultCreationLog', vaultCreationLogId, "transaction", event.transaction.hash.toHexString())
+        // vaultCollateralChangeLog is created
+        const vaultCollateralChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-1';
+        assert.fieldEquals('VaultCollateralChangeLog', vaultCollateralChangeLogId, 'collateralDiff', '100.5')
+        // vaultDebtChangeLog is created
+        const vaultDebtChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-2';
+        assert.fieldEquals('VaultDebtChangeLog', vaultDebtChangeLogId, 'debtDiff', '200.5')
       })
     })
   })

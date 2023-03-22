@@ -1,4 +1,4 @@
-import { Bytes } from '@graphprotocol/graph-ts'
+import { BigDecimal, Bytes } from '@graphprotocol/graph-ts'
 import { bytes, integer, decimal, units } from '@protofire/subgraph-toolkit'
 
 import { LogNote } from '../../../../generated/Vat/Vat'
@@ -6,7 +6,6 @@ import { LogNote } from '../../../../generated/Vat/Vat'
 import {
   CollateralType,
   Vault,
-  VaultCreationLog,
   VaultCollateralChangeLog,
   VaultDebtChangeLog,
   VaultSplitChangeLog,
@@ -14,12 +13,12 @@ import {
   CollateralChangeLog,
   User,
   SystemDebt,
-  SystemState,
   CollateralTransferLog,
   LiveChangeLog,
+  CollateralPrice,
 } from '../../../../generated/schema'
 
-import { collaterals, collateralTypes, users, system as systemModule, vaults, systemDebts } from '../../../entities'
+import { collaterals, collateralTypes, users, system as systemModule, vaults, systemDebts, protocolParameterChangeLogs as changeLogs } from '../../../entities'
 
 // Register a new collateral type
 export function handleInit(event: LogNote): void {
@@ -64,6 +63,9 @@ export function handleFile(event: LogNote): void {
 
     if (what == 'Line') {
       system.totalDebtCeiling = units.fromRad(data)
+      changeLogs.createProtocolParameterChangeLog(event, "VAT", "Line", "",
+        new changeLogs.ProtocolParameterValueBigDecimal(system.totalDebtCeiling))
+
     }
   } else if (signature == '0x1a0b287e') {
     let ilk = event.params.arg1.toString()
@@ -75,10 +77,19 @@ export function handleFile(event: LogNote): void {
     if (collateral != null) {
       if (what == 'spot') {
         // Spot price is stored on the current price object
+        changeLogs.createProtocolParameterChangeLog(event, "VAT", what, ilk,
+          new changeLogs.ProtocolParameterValueBigDecimal(units.fromRay(data)))
+
       } else if (what == 'line') {
         collateral.debtCeiling = units.fromRad(data)
+        changeLogs.createProtocolParameterChangeLog(event, "VAT", what, ilk,
+          new changeLogs.ProtocolParameterValueBigDecimal(collateral.debtCeiling))
+
       } else if (what == 'dust') {
         collateral.vaultDebtFloor = units.fromRad(data)
+        changeLogs.createProtocolParameterChangeLog(event, "VAT", what, ilk,
+          new changeLogs.ProtocolParameterValueBigDecimal(collateral.vaultDebtFloor))
+
       }
 
       collateral.updatedAt = event.block.timestamp
@@ -212,6 +223,17 @@ export function handleMove(event: LogNote): void {
   log.save()
 }
 
+// this function exists just because assembly script does not properly
+// handle string | null type assigned as variable.
+// see related issue: https://github.com/AssemblyScript/assemblyscript/issues/2455
+const stringOrNullToString = (stringOrNull: string | null): string => {
+  if (stringOrNull === null) {
+    return ""
+  } else {
+    return stringOrNull
+  }
+}
+
 // Create or modify a Vault
 export function handleFrob(event: LogNote): void {
   let ilk = event.params.arg1.toString()
@@ -223,48 +245,30 @@ export function handleFrob(event: LogNote): void {
 
   let collateralType = CollateralType.load(ilk)
   if (collateralType != null) {
-    let system = systemModule.getSystemState(event)
-
     let Δdebt = units.fromWad(dart)
     let Δcollateral = units.fromWad(dink)
 
     let vault = Vault.load(urn.toHexString() + '-' + collateralType.id)
+    let vaultOldCollateralizationRatio = decimal.ZERO
 
     if (vault == null) {
-      let owner = users.getOrCreateUser(urn)
-      owner.vaultCount = owner.vaultCount.plus(integer.ONE)
-      owner.save()
 
       // Register new unmanaged vault
-      vault = new Vault(urn.toHexString() + '-' + collateralType.id)
-      vault.collateralType = collateralType.id
-      vault.collateral = decimal.ZERO
-      vault.debt = decimal.ZERO
-      vault.handler = urn
-      vault.owner = owner.id
+      vault = vaults.loadOrCreateVault(urn, collateralType, event, false)
+      vault.collateral = vault.collateral.plus(Δcollateral)
+      vault.debt = vault.debt.plus(Δdebt)
 
-      vault.openedAt = event.block.timestamp
-      vault.openedAtBlock = event.block.number
-      vault.openedAtTransaction = event.transaction.hash
-
-      collateralType.unmanagedVaultCount = collateralType.unmanagedVaultCount.plus(integer.ONE)
-
-      system.unmanagedVaultCount = system.unmanagedVaultCount.plus(integer.ONE)
-
-      // Log vault creation
-      let vaultCreationLog = new VaultCreationLog(
-        event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-0',
-      )
-      vaultCreationLog.vault = vault.id
-
-      vaultCreationLog.block = event.block.number
-      vaultCreationLog.timestamp = event.block.timestamp
-      vaultCreationLog.transaction = event.transaction.hash
-
-      vaultCreationLog.save()
     } else {
-      let previousCollateral = vault.collateral
-      let previousDebt = vault.debt
+      // temporarily remember old collateralization ratio
+      let collateralTypePrice: string = stringOrNullToString(collateralType.price)
+      if (collateralTypePrice !== "") {
+        if (vault.debt.notEqual(decimal.ZERO) && collateralType.rate.notEqual(decimal.ZERO)) {
+          const price = CollateralPrice.load(collateralTypePrice)
+          if (price != null) {
+            vaultOldCollateralizationRatio = vault.collateral.times(price.value).div(vault.debt.times(collateralType.rate))
+          }
+        }
+      }
 
       // Update existing Vault
       vault.collateral = vault.collateral.plus(Δcollateral)
@@ -276,37 +280,42 @@ export function handleFrob(event: LogNote): void {
       vault.updatedAtBlock = event.block.number
       vault.updatedAtTransaction = event.transaction.hash
 
-      if (!Δcollateral.equals(decimal.ZERO)) {
-        let vaultCollateralChangeLog = new VaultCollateralChangeLog(
-          event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-1',
-        )
-        vaultCollateralChangeLog.vault = vault.id
-        vaultCollateralChangeLog.collateralBefore = previousCollateral
-        vaultCollateralChangeLog.collateralAfter = vault.collateral
-        vaultCollateralChangeLog.collateralDiff = Δcollateral
+    }
+    let previousCollateral = vault.collateral
+    let previousDebt = vault.debt
 
-        vaultCollateralChangeLog.block = event.block.number
-        vaultCollateralChangeLog.timestamp = event.block.timestamp
-        vaultCollateralChangeLog.transaction = event.transaction.hash
+    if (!Δcollateral.equals(decimal.ZERO)) {
+      let vaultCollateralChangeLog = new VaultCollateralChangeLog(
+        event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-1',
+      )
+      vaultCollateralChangeLog.vault = vault.id
+      vaultCollateralChangeLog.collateralBefore = previousCollateral
+      vaultCollateralChangeLog.collateralAfter = vault.collateral
+      vaultCollateralChangeLog.collateralDiff = Δcollateral
 
-        vaultCollateralChangeLog.save()
-      }
+      vaultCollateralChangeLog.block = event.block.number
+      vaultCollateralChangeLog.timestamp = event.block.timestamp
+      vaultCollateralChangeLog.transaction = event.transaction.hash
+      vaultCollateralChangeLog.rate = collateralType.rate
 
-      if (!Δdebt.equals(decimal.ZERO)) {
-        let vaultDebtChangeLog = new VaultDebtChangeLog(
-          event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-2',
-        )
-        vaultDebtChangeLog.vault = vault.id
-        vaultDebtChangeLog.debtBefore = previousDebt
-        vaultDebtChangeLog.debtAfter = vault.debt
-        vaultDebtChangeLog.debtDiff = Δdebt
+      vaultCollateralChangeLog.save()
+    }
 
-        vaultDebtChangeLog.block = event.block.number
-        vaultDebtChangeLog.timestamp = event.block.timestamp
-        vaultDebtChangeLog.transaction = event.transaction.hash
+    if (!Δdebt.equals(decimal.ZERO)) {
+      let vaultDebtChangeLog = new VaultDebtChangeLog(
+        event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-2',
+      )
+      vaultDebtChangeLog.vault = vault.id
+      vaultDebtChangeLog.debtBefore = previousDebt
+      vaultDebtChangeLog.debtAfter = vault.debt
+      vaultDebtChangeLog.debtDiff = Δdebt
 
-        vaultDebtChangeLog.save()
-      }
+      vaultDebtChangeLog.block = event.block.number
+      vaultDebtChangeLog.timestamp = event.block.timestamp
+      vaultDebtChangeLog.transaction = event.transaction.hash
+      vaultDebtChangeLog.rate = collateralType.rate
+
+      vaultDebtChangeLog.save()
     }
 
     let collateralOwner = users.getOrCreateUser(v)
@@ -347,9 +356,52 @@ export function handleFrob(event: LogNote): void {
     collateralType.updatedAtBlock = event.block.number
     collateralType.updatedAtTransaction = event.transaction.hash
 
+    // calculate new safetyLevel
+    // if (liquidationRatio == oldRatio) then safetyLevel = safetyLevel + 1
+    // else safetyLevel = safetyLevel + max(5, (newRatio - liquidationRatio)/(oldRatio - liquidationRatio))
+    let ΔsafetyLevel = decimal.ZERO
+    if (collateralType.liquidationRatio.equals(vaultOldCollateralizationRatio)) {
+      // value cannot be calculated. it could be very close to liquidation,
+      // or the vault user is very strict. could be decimal.ONE instead.
+      ΔsafetyLevel = decimal.ZERO
+    } else {
+      // calculate new collateral ratio.
+      let vaultNewCollateralizationRatio = decimal.ZERO
+      let collateralTypePrice: string = stringOrNullToString(collateralType.price)
+      if (collateralTypePrice !== "") {
+        if (vault.debt.notEqual(decimal.ZERO) && collateralType.rate.notEqual(decimal.ZERO)) {
+          const price = CollateralPrice.load(collateralTypePrice)
+          if (price != null) {
+            vaultNewCollateralizationRatio = vault.collateral.times(price.value).div(vault.debt.times(collateralType.rate))
+          }
+        }
+      }
+      if (vault.collateral.equals(decimal.ZERO) ||
+        vault.debt.equals(decimal.ZERO) ||
+        vaultOldCollateralizationRatio.equals(decimal.ZERO) ||
+        vaultNewCollateralizationRatio.equals(decimal.ZERO)) {
+        // if collateral or debt is zero, the vault is considered inactive and safety is undefined.
+        // but there is still some action, so let it be one.
+        ΔsafetyLevel = BigDecimal.fromString("1")
+      } else if (collateralType.liquidationRatio.gt(vaultOldCollateralizationRatio) ||
+        collateralType.liquidationRatio.gt(vaultNewCollateralizationRatio)) {
+        // if any of collateralization ratio is less than liquidation ratio
+        // then safety level is decreased
+        ΔsafetyLevel = BigDecimal.fromString("-5")
+      } else {
+        // else, if ΔsafetyLevel can be calculated as ratio and max(..., 5),
+        // then calculate it.
+        ΔsafetyLevel = (vaultNewCollateralizationRatio.minus(collateralType.liquidationRatio))
+          .div(vaultOldCollateralizationRatio.minus(collateralType.liquidationRatio))
+        if (ΔsafetyLevel.gt(BigDecimal.fromString("5"))) {
+          ΔsafetyLevel = BigDecimal.fromString("5")
+        }
+      }
+    }
+    vault.safetyLevel = vault.safetyLevel.plus(ΔsafetyLevel)
+
     vault.save()
     collateralType.save()
-    system.save()
   }
 }
 
@@ -367,30 +419,34 @@ export function handleFork(event: LogNote): void {
       .concat('-')
       .concat(ilk),
   )
-  let vault2 = Vault.load(
-    dst
-      .toHexString()
-      .concat('-')
-      .concat(ilk),
-  )
 
-  if (vault1 && vault2) {
-    vault1.collateral = vault1.collateral.minus(units.fromWad(dink))
-    vault1.debt = vault1.debt.minus(units.fromWad(dart))
+  let collateralType = CollateralType.load(ilk)
+  if (collateralType) {
+    if (vault1) {
+      vault1.collateral = vault1.collateral.minus(units.fromWad(dink))
+      vault1.debt = vault1.debt.minus(units.fromWad(dart))
+      vault1.save()
+    }
+
+    let vault2 = vaults.loadOrCreateVault(dst, collateralType, event, false)
     vault2.collateral = vault2.collateral.plus(units.fromWad(dink))
     vault2.debt = vault2.debt.plus(units.fromWad(dart))
-    vault1.save()
     vault2.save()
 
     let log = new VaultSplitChangeLog(event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-3')
     log.src = src
     log.dst = dst
-    log.vault = vault1.id
+    if (vault1) {
+      log.vault = vault1.id
+    } else if (vault2) {
+      log.vault = vault2.id
+    }
     log.collateralToMove = units.fromWad(dink)
     log.debtToMove = units.fromWad(dart)
     log.block = event.block.number
     log.timestamp = event.block.timestamp
     log.transaction = event.transaction.hash
+    log.rate = collateralType.rate
     log.save()
   }
 }
@@ -407,9 +463,6 @@ export function handleGrab(event: LogNote): void {
   let dart = bytes.toSignedInt(Bytes.fromUint8Array(event.params.data.subarray(164, 196)))
   let debtAmount = units.fromWad(dart)
 
-  let user = users.getOrCreateUser(urnAddress)
-  user.save()
-
   let liquidator = users.getOrCreateUser(liquidatorAddress)
   liquidator.save()
 
@@ -421,7 +474,7 @@ export function handleGrab(event: LogNote): void {
   collateralType.totalDebt = totalDebt
   collateralType.save()
 
-  let vault = vaults.loadOrCreateVault(urnAddress, collateralType.id, user.id)
+  let vault = vaults.loadOrCreateVault(urnAddress, collateralType, event, false)
   vault.collateral = vault.collateral.plus(collateralAmount) // dink its a negative number
   vault.debt = vault.debt.plus(debtAmount) // dart its a negative number
   vault.save()
@@ -461,13 +514,10 @@ export function handleHeal(event: LogNote): void {
     systemDebt.save()
   }
 
-  let system = SystemState.load('current')
-
-  if (system) {
-    system.totalDebt = system.totalDebt.minus(rad)
-    system.totalSystemDebt = system.totalSystemDebt.minus(rad)
-    system.save()
-  }
+  let system = systemModule.getSystemState(event)
+  system.totalDebt = system.totalDebt.minus(rad)
+  system.totalSystemDebt = system.totalSystemDebt.minus(rad)
+  system.save()
 }
 
 // Mint unbacked stablecoin
@@ -509,7 +559,7 @@ export function handleFold(event: LogNote): void {
   let rate = units.fromRad(bytes.toSignedInt(event.params.arg3))
 
   let collateral = CollateralType.load(ilk)
-  let user = User.load(userAddress.toHexString())
+  let user = users.getOrCreateUser(userAddress)
 
   if (collateral && user) {
     let rad = collateral.totalDebt.times(rate)

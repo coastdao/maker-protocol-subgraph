@@ -4,6 +4,8 @@ import { LogNote } from '../../../../../generated/Vow/Vow'
 import { handleFile } from '../../../../../src/mappings/modules/system-stabilizer/vow'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { system as systemModule } from '../../../../../src/entities'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 let signature: string
 
@@ -37,6 +39,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'debtAuctionDelay', value.toString())
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', "wait")
+        assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "3500")
+
       })
     })
 
@@ -49,6 +57,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'surplusAuctionLotSize', '100.5')
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "bump")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', '100.5')
+
       })
     })
 
@@ -61,6 +75,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'debtAuctionBidSize', '100.5')
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "sump")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', '100.5')
+
       })
     })
 
@@ -73,6 +93,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'debtAuctionInitialLotSize', '100.7')
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "dump")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', '100.7')
+
       })
     })
 
@@ -85,6 +111,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'surplusAuctionBuffer', '100.5')
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "hump")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', '100.5')
+
       })
     })
   })
@@ -103,6 +135,12 @@ describe('Vow#handleFile', () => {
         handleFile(event)
 
         assert.fieldEquals('SystemState', 'current', 'vowFlapperContract', address.toHexString())
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'contractType', "VOW")
+        assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey1', "flapper")
+        assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey2', "")
+        assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterValue', address.toHexString())
+
       })
     })
 
@@ -123,6 +161,8 @@ describe('Vow#handleFile', () => {
 
         assert.fieldEquals('SystemState', 'current', 'vowFlopperContract', prevAddress.toHexString())
         assert.fieldEquals('SystemState', 'current', 'vowFlapperContract', prevAddress.toHexString())
+        let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+        assert.notInStore('ProtocolParameterChangeLog', protocolParameterChangeLogId)
       })
     })
   })
@@ -136,6 +176,12 @@ describe('Vow#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'vowFlopperContract', address.toHexString())
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'contractType', "VOW")
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey1', "flopper")
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBytes', protocolParameterChangeLogId, 'parameterValue', address.toHexString())
+
     })
   })
 })

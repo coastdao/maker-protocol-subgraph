@@ -4,6 +4,8 @@ import { LogNote } from '../../../../../generated/Vow/Vow'
 import { handleFlop } from '../../../../../src/mappings/modules/system-stabilizer/vow'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { system as systemModule } from '../../../../../src/entities'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 test('Vow#handleFlop: Creates the entity VowFlopLog and changes system.debtOnAuctionTotalAmount', () => {
   let event = changetype<LogNote>(tests.helpers.events.getNewEvent([]))

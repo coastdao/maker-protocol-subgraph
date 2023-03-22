@@ -1,11 +1,11 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts'
 import { test, assert, clearStore, describe, afterAll } from 'matchstick-as'
 import { tests } from '../../../../../src/mappings/modules/tests'
-import { Take as TakeEvent } from '../../../../../generated/Clipper/Clipper'
+import { Take as TakeEvent } from '../../../../../generated/ClipperEth/Clipper'
 import { handleTake } from '../../../../../src/mappings/modules/liquidation/clipper'
 import { saleAuctions } from '../../../../../src/entities'
 
-function createSaleAuction(id: BigInt, event: TakeEvent): void {
+function createSaleAuction(id: string, event: TakeEvent): void {
   let idStr = id.toString()
 
   event.block.timestamp = BigInt.fromI32(1)
@@ -21,8 +21,8 @@ describe('Clipper#handleTake', () => {
       let max = BigInt.fromString('10000000000000000000000000000') // 10 ray
       let price = BigInt.fromString('11000000000000000000000000000') // 11 ray
       let owe = BigInt.fromString('1000000000000000000000000000') // 1 ray
-      let tab = BigInt.fromString('0') // 0 rad
-      let lot = BigInt.fromString('101000000000000000000') // 101 wad
+      let tab = BigInt.fromString('5000000000000000000000000000000000000000000000') // 5 rad
+      let lot = BigInt.fromString('0') // 0 wad
       let usr = Address.fromString('0x0000000000000000000000000000000000001111')
       let event = changetype<TakeEvent>(
         tests.helpers.events.getNewEvent([
@@ -35,14 +35,15 @@ describe('Clipper#handleTake', () => {
           tests.helpers.params.getAddress('usr', usr),
         ]),
       )
-      createSaleAuction(id, event)
+      const idStr = id.toString() + "-" + event.address.toHexString()
+      createSaleAuction(idStr, event)
 
       event.block.timestamp = BigInt.fromI32(1001)
 
       handleTake(event)
 
-      assert.fieldEquals('SaleAuction', id.toString(), 'isActive', 'false')
-      assert.fieldEquals('SaleAuction', id.toString(), 'updatedAt', '1001')
+      assert.fieldEquals('SaleAuction', idStr, 'isActive', 'false')
+      assert.fieldEquals('SaleAuction', idStr, 'updatedAt', '1001')
     })
   })
 
@@ -66,14 +67,15 @@ describe('Clipper#handleTake', () => {
           tests.helpers.params.getAddress('usr', usr),
         ]),
       )
-      createSaleAuction(id, event)
+      const idStr = id.toString() + "-" + event.address.toHexString()
+      createSaleAuction(idStr, event)
 
       event.block.timestamp = BigInt.fromString('1001')
 
       handleTake(event)
 
-      assert.fieldEquals('SaleAuction', id.toString(), 'isActive', 'false')
-      assert.fieldEquals('SaleAuction', id.toString(), 'updatedAt', '1001')
+      assert.fieldEquals('SaleAuction', idStr, 'isActive', 'false')
+      assert.fieldEquals('SaleAuction', idStr, 'updatedAt', '1001')
     })
   })
 
@@ -98,16 +100,21 @@ describe('Clipper#handleTake', () => {
         ]),
       )
 
-      createSaleAuction(id, event)
+      const idStr = id.toString() + "-" + event.address.toHexString()
+      createSaleAuction(idStr, event)
 
       event.block.timestamp = BigInt.fromI32(1001)
 
       handleTake(event)
+      // default address internally used by matchstick framework
+      // https://github.com/LimeChain/matchstick-as/blob/ce1cb9dfb7c3ed3d60eef5a3ef3134798fe71364/assembly/defaults.ts#L3
+      let senderAddress = '0xa16081f360e3847006db660bae1c6d1b2e17ec2a'
 
-      assert.fieldEquals('SaleAuction', id.toString(), 'amountDaiToRaise', '5')
-      assert.fieldEquals('SaleAuction', id.toString(), 'amountCollateralToSell', '101')
-      assert.fieldEquals('SaleAuction', id.toString(), 'updatedAt', '1001')
-      assert.fieldEquals('SaleAuction', id.toString(), 'boughtAt', '1001')
+      assert.fieldEquals('SaleAuction', idStr, 'amountDaiToRaise', '5')
+      assert.fieldEquals('SaleAuction', idStr, 'amountCollateralToSell', '101')
+      assert.fieldEquals('SaleAuction', idStr, 'updatedAt', '1001')
+      assert.fieldEquals('SaleAuction', idStr, 'boughtAt', '1001')
+      assert.fieldEquals('SaleAuction', idStr, 'userTaker', senderAddress)
     })
   })
 

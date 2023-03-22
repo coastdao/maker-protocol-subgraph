@@ -3,6 +3,8 @@ import { afterAll, beforeAll, clearStore, describe, test, assert } from 'matchst
 import { File } from '../../../../../generated/StairstepExponentialDecrease/StairstepExponentialDecrease'
 import { handleFile } from '../../../../../src/mappings/modules/liquidation/abacus'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('Abacus#handleFile', () => {
   describe('When [what] = cut', () => {
@@ -20,6 +22,11 @@ describe('Abacus#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'secondsBetweenPriceDrops', '11')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "ABACUS")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', data)
     })
   })
 
@@ -38,6 +45,12 @@ describe('Abacus#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'multiplicatorFactorPerStep', '11')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "ABACUS")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "11")
+
     })
   })
 

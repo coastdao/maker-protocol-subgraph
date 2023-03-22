@@ -3,18 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "license": "GPL-3.0-only",
-  "author": "Sebastián Galiano <sgaliano@gmail.com>",
   "scripts": {
     "auth": "npx graph auth https://api.thegraph.com/deploy/",
     "test": "graph test",
     "build": "npx graph build",
     "codegen": "npx graph codegen",
-    "deploy": "npx graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ protofire/maker-protocol"
+    "deploy": "npx graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ protofire/maker-protocol",
+    "fix-network:testnet": "node render-templates.js testnet",
+    "fix-network:mainnet": "node render-templates.js mainnet",
+    "create-local": "graph create --node http://localhost:8020/ protofire/maker-protocol",
+    "remove-local": "graph remove --node http://localhost:8020/ protofire/maker-protocol",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 protofire/maker-protocol",
+    "clean": "rm -rf build && rm -rf generated && rm -rf subgraph.yaml && rm -rf abis && rm -rf networks.json && rm -rf docker/testchain && rm -rf docker/data && rm -rf docker/graph-node.yml"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.28.0",
     "@graphprotocol/graph-ts": "0.27.0",
     "@protofire/subgraph-toolkit": "https://github.com/protofire/subgraph-toolkit.git#develop",
-    "matchstick-as": "0.5.0"
+    "ethers": "^6.2.3",
+    "matchstick-as": "0.5.0",
+    "mustache": "^4.2.0"
   }
 }

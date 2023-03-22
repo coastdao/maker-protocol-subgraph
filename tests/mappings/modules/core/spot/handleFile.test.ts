@@ -5,6 +5,8 @@ import { CollateralType } from '../../../../../generated/schema'
 import { LogNote } from '../../../../../generated/Spot/Spotter'
 import { handleFile } from '../../../../../src/mappings/modules/core/spot'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function strRadToBytes(value: string): Bytes {
   return Bytes.fromUint8Array(Bytes.fromBigInt(BigInt.fromString(value)).reverse())
@@ -37,6 +39,11 @@ test('Spot#handleFile updates CollateralType.liquidationRatio when signature is 
   handleFile(event)
 
   assert.fieldEquals('CollateralType', ilk, 'liquidationRatio', '25165824')
+  let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "SPOT")
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', '25165824')
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', ilk)
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "mat")
 })
 
 test('Spot#handleFile creates SpotParLog when signature is 0x29ae8114 and what is par', () => {
@@ -61,6 +68,12 @@ test('Spot#handleFile creates SpotParLog when signature is 0x29ae8114 and what i
   handleFile(event)
 
   assert.fieldEquals('SpotParLog', event.transaction.hash.toHexString(), 'par', '1000000000000000000000000000')
+
+  let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+  assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "SPOT")
+  assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "1000000000000000000000000000")
+  assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+  assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', "par")
 })
 
 test('Spot#handleFile creates CollateralPrice when signature is 0xebecb39d and what is pip', () => {
@@ -90,5 +103,11 @@ test('Spot#handleFile creates CollateralPrice when signature is 0xebecb39d and w
   handleFile(event)
 
   assert.fieldEquals('CollateralPrice', event.block.number.toString() + '-' + ilk, 'value', '25165824000000000')
+  let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "SPOT")
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "25165824000000000")
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', ilk)
+  assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', "pip")
+
   clearStore()
 })

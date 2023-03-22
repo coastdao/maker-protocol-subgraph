@@ -9,9 +9,9 @@ import {
 import { system as systemState, users } from '../../../entities'
 
 export function handleTransfer(event: TransferEvent): void {
-  let from = event.params.from
-  let to = event.params.to
-  let value = event.params.value
+  let from = event.params.src
+  let to = event.params.dst
+  let value = event.params.wad
   let amount = units.fromWad(value)
 
   let mkrTransferId = from
@@ -41,9 +41,9 @@ export function handleTransfer(event: TransferEvent): void {
 }
 
 export function handleApproval(event: ApprovalEvent): void {
-  let owner = event.params.owner
-  let spender = event.params.spender
-  let value = event.params.value
+  let owner = event.params.src
+  let spender = event.params.guy
+  let value = event.params.wad
 
   let amount = units.fromWad(value)
 

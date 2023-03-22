@@ -4,6 +4,8 @@ import { tests } from '../../../../../src/mappings/modules/tests'
 import { system as systemModule } from '../../../../../src/entities'
 import { Kick } from '../../../../../generated/Flap/Flapper'
 import { handleKick } from '../../../../../src/mappings/modules/system-stabilizer/flap'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 test('Flapper#handleKick: Creates the entity Auction.', () => {
   let id = BigInt.fromString('50')

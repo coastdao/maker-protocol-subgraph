@@ -4,6 +4,8 @@ import { User } from '../../../../../generated/schema'
 import { LogNote } from '../../../../../generated/Vat/Vat'
 import { handleSuck } from '../../../../../src/mappings/modules/core/vat'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(u: string, v: string, rad: string): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x1a0b287e'))

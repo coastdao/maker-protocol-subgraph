@@ -4,6 +4,8 @@ import { LogNote } from '../../../../../generated/Vow/Vow'
 import { handleFlog } from '../../../../../src/mappings/modules/system-stabilizer/vow'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { mockSin } from '../../../../helpers/mockedFunctions'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(era: i32): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x889bcf44'))

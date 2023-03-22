@@ -4,6 +4,7 @@ import { test, clearStore } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Vat/Vat'
 import { handleInit } from '../../../../../src/mappings/modules/core/vat'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockDebt } from '../../../../helpers/mockedFunctions'
 
 test('Vat#handleInit creates initial CollateralType and updates SystemState', () => {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromUTF8('sig'))
@@ -14,6 +15,7 @@ test('Vat#handleInit creates initial CollateralType and updates SystemState', ()
 
   let event = changetype<LogNote>(tests.helpers.events.getNewEvent([sig, arg1, arg2, arg3, data]))
 
+  mockDebt("0")
   handleInit(event)
 
   let collateralTypeFields = new TypedMap<string, string>()

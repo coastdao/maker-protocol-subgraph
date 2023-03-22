@@ -5,6 +5,8 @@ import { Burn as BurnEvent } from '../../../../generated/DSToken/DSToken'
 import { users } from '../../../../src/entities'
 import { handleBurn } from '../../../../src/mappings/modules/mkr/dsToken'
 import { tests } from '../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(guy: Address, wad: BigInt): BurnEvent {
   return changetype<BurnEvent>(

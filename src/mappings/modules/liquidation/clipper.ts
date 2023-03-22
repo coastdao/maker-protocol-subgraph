@@ -1,4 +1,4 @@
-import { BigDecimal } from '@graphprotocol/graph-ts'
+import { BigDecimal, Bytes } from '@graphprotocol/graph-ts'
 import { units } from '@protofire/subgraph-toolkit'
 import {
   Kick as KickEvent,
@@ -9,25 +9,34 @@ import {
   File1 as FileAddressEvent,
 } from '../../../../generated/Clipper/Clipper'
 import { SaleAuction } from '../../../../generated/schema'
-import { saleAuctions, system as systemModule } from '../../../entities'
+import { saleAuctions, system as systemModule, users, protocolParameterChangeLogs as changeLogs } from '../../../entities'
 
 export function handleFile1(event: FileBigIntEvent): void {
   let what = event.params.what.toString()
   let data = event.params.data
 
   let systemState = systemModule.getSystemState(event)
-
+  let protocolParameterValue: changeLogs.ProtocolParameterValueType = new changeLogs.ProtocolParameterValueBigDecimal(BigDecimal.fromString("0"))
   if (what == 'buf') {
     systemState.saleAuctionStartingPriceFactor = units.fromRay(data)
+    protocolParameterValue = new changeLogs.ProtocolParameterValueBigDecimal(systemState.saleAuctionStartingPriceFactor)
   } else if (what == 'tail') {
     systemState.saleAuctionResetTime = data
+    protocolParameterValue = new changeLogs.ProtocolParameterValueBigInt(systemState.saleAuctionResetTime)
   } else if (what == 'cusp') {
     systemState.saleAuctionDropPercentage = units.fromRay(data)
+    protocolParameterValue = new changeLogs.ProtocolParameterValueBigDecimal(systemState.saleAuctionDropPercentage)
   } else if (what == 'chip') {
     systemState.saleAuctionDaiToRaisePercentage = units.fromWad(data)
+    protocolParameterValue = new changeLogs.ProtocolParameterValueBigDecimal(systemState.saleAuctionDaiToRaisePercentage)
   } else if (what == 'tip') {
     systemState.saleAuctionFlatFee = units.fromRad(data)
+    protocolParameterValue = new changeLogs.ProtocolParameterValueBigDecimal(systemState.saleAuctionFlatFee)
   }
+  if (what) {
+    changeLogs.createProtocolParameterChangeLog(event, "CLIPPER", what, "", protocolParameterValue)
+  }
+
   systemState.save()
 }
 
@@ -36,7 +45,6 @@ export function handleFile2(event: FileAddressEvent): void {
   let data = event.params.data
 
   let systemState = systemModule.getSystemState(event)
-
   if (what == 'spotter') {
     systemState.saleAuctionSpotterContract = data
   } else if (what == 'dog') {
@@ -45,6 +53,9 @@ export function handleFile2(event: FileAddressEvent): void {
     systemState.saleAuctionVowContract = data
   } else if (what == 'calc') {
     systemState.saleAuctionCalcContract = data
+  }
+  if (what) {
+    changeLogs.createProtocolParameterChangeLog(event, "CLIPPER", what, "", new changeLogs.ProtocolParameterValueBytes(data))
   }
 
   systemState.save()
@@ -58,13 +69,14 @@ export function handleKick(event: KickEvent): void {
   let kpr = event.params.kpr.toHexString()
   let top = units.fromRay(event.params.top)
 
-  let saleAuction = saleAuctions.loadOrCreateSaleAuction(id, event)
+  let saleAuction = saleAuctions.loadOrCreateSaleAuction(id + "-" + event.address.toHexString(), event)
   saleAuction.amountDaiToRaise = tab
   saleAuction.amountCollateralToSell = lot
   saleAuction.userExcessCollateral = usr
   saleAuction.userIncentives = kpr
   saleAuction.startingPrice = top
   saleAuction.isActive = true
+  saleAuction.userTaker = new Bytes(0)
 
   saleAuction.save()
 
@@ -76,7 +88,7 @@ export function handleTake(event: TakeEvent): void {
   let tab = units.fromRad(event.params.tab)
   let lot = units.fromWad(event.params.lot)
 
-  let saleAuction = SaleAuction.load(id)
+  let saleAuction = SaleAuction.load(id + "-" + event.address.toHexString())
 
   if (saleAuction) {
     if (lot == BigDecimal.fromString('0')) {
@@ -95,6 +107,7 @@ export function handleTake(event: TakeEvent): void {
 
     saleAuction.boughtAt = event.block.timestamp
     saleAuction.updatedAt = event.block.timestamp
+    saleAuction.userTaker = users.getOrCreateUser(event.transaction.from).address
     saleAuction.save()
   }
 }
@@ -102,7 +115,7 @@ export function handleRedo(event: RedoEvent): void {
   let id = event.params.id.toString()
   let top = units.fromRay(event.params.top)
 
-  let saleAuction = SaleAuction.load(id)
+  let saleAuction = SaleAuction.load(id + "-" + event.address.toHexString())
   if (saleAuction) {
     saleAuction.resetedAt = event.block.timestamp
     saleAuction.startingPrice = top
@@ -115,7 +128,7 @@ export function handleRedo(event: RedoEvent): void {
 export function handleYank(event: YankEvent): void {
   let id = event.params.id.toString()
 
-  let saleAuction = SaleAuction.load(id)
+  let saleAuction = SaleAuction.load(id + "-" + event.address.toHexString())
 
   if (saleAuction) {
     saleAuction.isActive = false

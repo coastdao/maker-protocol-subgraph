@@ -7,6 +7,7 @@ export namespace saleAuctions {
     if (!saleAuction) {
       saleAuction = new SaleAuction(id)
       saleAuction.startedAt = event.block.timestamp
+      saleAuction.isActive = true
     }
     saleAuction.updatedAt = event.block.timestamp
     return saleAuction

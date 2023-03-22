@@ -1,10 +1,10 @@
 import { Address } from '@graphprotocol/graph-ts'
-import { bytes, integer, decimal } from '@protofire/subgraph-toolkit'
+import { bytes, integer } from '@protofire/subgraph-toolkit'
 
 import { DssCdpManager, NewCdp, LogNote } from '../../../../generated/CdpManager/DssCdpManager'
-import { CollateralType, Vault, VaultCreationLog, VaultTransferChangeLog } from '../../../../generated/schema'
+import { CollateralType, Vault, VaultTransferChangeLog } from '../../../../generated/schema'
 
-import { users, system as systemModule } from '../../../entities'
+import { users, vaults } from '../../../entities'
 
 // Open a new CDP for a given user
 export function handleOpen(event: NewCdp): void {
@@ -15,44 +15,12 @@ export function handleOpen(event: NewCdp): void {
   let collateral = CollateralType.load(ilk.toString())
 
   if (collateral != null) {
-    let owner = users.getOrCreateUser(event.params.own)
-    owner.vaultCount = owner.vaultCount.plus(integer.ONE)
-    owner.save()
 
     // Register new vault
-    let vault = new Vault(urn.toHexString() + '-' + collateral.id)
+    let vault = vaults.loadOrCreateVault(urn, collateral, event, true)
     vault.cdpId = event.params.cdp
-    vault.collateralType = collateral.id
-    vault.collateral = decimal.ZERO
-    vault.debt = decimal.ZERO
-    vault.handler = urn
-    vault.owner = owner.id
-
-    vault.openedAt = event.block.timestamp
-    vault.openedAtBlock = event.block.number
-    vault.openedAtTransaction = event.transaction.hash
-
-    // Update vault counter
-    collateral.vaultCount = collateral.vaultCount.plus(integer.ONE)
-
     vault.save()
-    collateral.save()
-
-    // Log vault creation
-    let log = new VaultCreationLog(event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-0')
-    log.vault = vault.id
-
-    log.block = event.block.number
-    log.timestamp = event.block.timestamp
-    log.transaction = event.transaction.hash
-
-    log.save()
   }
-
-  // Update system state
-  let system = systemModule.getSystemState(event)
-  system.vaultCount = system.vaultCount.plus(integer.ONE)
-  system.save()
 }
 
 // Give the CDP ownership to a another address
@@ -65,8 +33,9 @@ export function handleGive(event: LogNote): void {
   let urn = manager.urns(cdp)
 
   let vault = Vault.load(urn.toHexString() + '-' + ilk.toString())
+  let collateralType = CollateralType.load(ilk.toString())
 
-  if (vault != null) {
+  if (collateralType != null && vault != null) {
     let previousOwner = users.getOrCreateUser(Address.fromString(vault.owner))
     let nextOwner = users.getOrCreateUser(dst)
 
@@ -89,6 +58,7 @@ export function handleGive(event: LogNote): void {
     log.block = event.block.number
     log.timestamp = event.block.timestamp
     log.transaction = event.transaction.hash
+    log.rate = collateralType.rate
 
     log.save()
   }

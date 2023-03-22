@@ -5,6 +5,8 @@ import { SystemState } from '../../../../../generated/schema'
 import { LogNote } from '../../../../../generated/Vow/Vow'
 import { handleKiss } from '../../../../../src/mappings/modules/system-stabilizer/vow'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(rad: string): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x1a0b287e'))

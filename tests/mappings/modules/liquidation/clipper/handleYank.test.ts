@@ -1,9 +1,9 @@
 import { BigInt } from '@graphprotocol/graph-ts'
 import { clearStore, describe, test, beforeEach, afterEach, assert } from 'matchstick-as'
-import { Yank as YankEvent } from '../../../../../generated/Clipper/Clipper'
+import { Yank as YankEvent } from '../../../../../generated/ClipperEth/Clipper'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { handleYank } from '../../../../../src/mappings/modules/liquidation/clipper'
-import { SaleAuction } from '../../../../../generated/schema'
+import { saleAuctions } from '../../../../../src/entities'
 
 function createEvent(id: string): YankEvent {
   return changetype<YankEvent>(
@@ -11,7 +11,14 @@ function createEvent(id: string): YankEvent {
   )
 }
 
-let saleAuctionId: string
+function createSaleAuction(id: string, event: YankEvent): void {
+  let idStr = id.toString()
+
+  event.block.timestamp = BigInt.fromI32(1)
+  let saleAuction = saleAuctions.loadOrCreateSaleAuction(idStr, event)
+  saleAuction.isActive = true
+  saleAuction.save()
+}
 
 describe('Clipper#handleYank', () => {
   afterEach(() => {
@@ -19,33 +26,29 @@ describe('Clipper#handleYank', () => {
   })
 
   describe('when SaleAuction exists', () => {
-    beforeEach(() => {
-      saleAuctionId = '1234'
-
-      let saleAuction = new SaleAuction(saleAuctionId)
-      saleAuction.startedAt = BigInt.fromU64(1234567)
-      saleAuction.save()
-    })
 
     test('soft deletes the SaleAuction', () => {
+      const saleAuctionId = '1234'
       let event = createEvent(saleAuctionId)
+      const idStr = saleAuctionId + "-" + event.address.toHexString()
+      createSaleAuction(idStr, event)
 
       handleYank(event)
 
-      assert.fieldEquals('SaleAuction', saleAuctionId, 'deletedAt', event.block.timestamp.toString())
-      assert.fieldEquals('SaleAuction', saleAuctionId, 'isActive', 'false')
+      assert.fieldEquals('SaleAuction', idStr, 'deletedAt', event.block.timestamp.toString())
+      assert.fieldEquals('SaleAuction', idStr, 'isActive', 'false')
     })
   })
 
   describe('when SaleAuction does not exist', () => {
     test('does not create it', () => {
-      saleAuctionId = '3456'
-
+      const saleAuctionId = '3456'
       let event = createEvent(saleAuctionId)
+      const idStr = saleAuctionId + "-" + event.address.toHexString()
 
       handleYank(event)
 
-      assert.notInStore('SaleAuction', saleAuctionId)
+      assert.notInStore('SaleAuction', idStr)
     })
   })
 })

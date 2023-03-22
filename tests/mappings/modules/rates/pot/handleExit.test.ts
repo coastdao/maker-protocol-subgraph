@@ -5,6 +5,8 @@ import { handleExit } from '../../../../../src/mappings/modules/rates/pot'
 import { tests } from '../../../../../src/mappings/modules/tests'
 import { users } from '../../../../../src/entities/users'
 import { system as systemModule } from '../../../../../src/entities/system'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 var defaultAmount: string
 

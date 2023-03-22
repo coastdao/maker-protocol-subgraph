@@ -1,0 +1,104 @@
+{
+  "Vat": {
+    "testnet": {
+      "address": "0xbA7793d31c86d4580d84b03Ab0F84f8375Da2ef6",
+      "startBlock": "8269000"
+    }
+  },
+  "Spotter": {
+    "testnet": {
+      "address": "0x7D8aF5f8e3455190FB59B7675739de6366fe419f",
+      "startBlock": "8269000"
+    }
+  },
+  "Flapper": {
+    "testnet": {
+      "address": "0x61534B24aF3CC804E37963F70FD2ea38eBE60891",
+      "startBlock": "8269000"
+    }
+  },
+  "Dog": {
+    "testnet": {
+      "address": "0xA5E1fDc447C58FCF654Ce69d34665deE2D5b3A96",
+      "startBlock": "8269000"
+    }
+  },
+  "Flopper": {
+    "testnet": {
+      "address": "0xC7216Da4dffA521a2D7C83d2dCcaC9142639a1aC",
+      "startBlock": "8269000"
+    }
+  },
+  "Vow": {
+    "testnet": {
+      "address": "0x078f0A07eDd42b0bAb33C76Eeb9b676545830ecc",
+      "startBlock": "8269000"
+    }
+  },
+  "Jug": {
+    "testnet": {
+      "address": "0x2bcfF42737192ba3e7691776dA91E0c40BF55228",
+      "startBlock": "8269000"
+    }
+  },
+  "Pot": {
+    "testnet": {
+      "address": "0x44dA90165e80712f5a22D7bE67AfCBedA89B9ff2",
+      "startBlock": "8269000"
+    }
+  },
+  "DSToken": {
+    "testnet": {
+      "address": "0x75ADAFAE6ED7f675d9fc36E13C88370c477D3a62",
+      "startBlock": "8269000"
+    }
+  },
+  "DSProxyFactory": {
+    "testnet": {
+      "address": "0xFbF2f08f3e9978Feca854d255B69CC6DDAEb1BA3",
+      "startBlock": "8269000"
+    }
+  },
+  "DssCdpManager": {
+    "testnet": {
+      "address": "0xA69d04048c6B4e1bB9E08985503a6bA21550C75e",
+      "startBlock": "8269000"
+    }
+  },
+  "Dai": {
+    "testnet": {
+      "address": "0xd8Fc74A40aA21D506AE3b9326697290990Dce76A",
+      "startBlock": "8269000"
+    }
+  },
+  "Clipper": {
+    "testnet": {
+      "address": "0x96455C67C5011bEEcD79311bE69EFd53A9686791",
+      "startBlock": "8269000"
+    }
+  },
+  "StairstepExponentialDecrease": {
+    "testnet": {
+      "address": "0x98B634c80824e7d607FEAE1681556F516dbd25C4",
+      "startBlock": "8269000"
+    }
+  },
+  "DSChief": {
+    "testnet": {
+      "address": "0xabB266748eE0921Fee99dDfF475fe180fF64b2FD",
+      "startBlock": "8269000"
+    }
+  },
+  "DSPause": {
+    "testnet": {
+      "address": "0x26B2EAFA06B0CB2879f8CDDBf7069508b041aA06",
+      "startBlock": "8269000"
+    }
+  },
+  "ChainLog": {
+    "testnet": {
+      "address": "0x060361951aDa5365C06B7cB87D46B325747Da10D",
+      "startBlock": "8269000"
+    }
+  }
+}

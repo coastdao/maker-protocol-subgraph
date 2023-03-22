@@ -3,8 +3,10 @@ import { describe, test, assert, clearStore } from 'matchstick-as'
 import { Bark } from '../../../../../generated/Dog/Dog'
 import { handleBark } from '../../../../../src/mappings/modules/liquidation/dog'
 import { tests } from '../../../../../src/mappings/modules/tests'
-import { CollateralType } from '../../../../../generated/schema'
+import { ChainLog, CollateralType } from '../../../../../generated/schema'
 import { system as systemModule } from '../../../../../src/entities'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('Dog#handleBark', () => {
   test('Creates a SaleAuction entity and adds to the SystemState#totalDaiAmountToCoverDebtAndFees and CollateralType#daiAmountToCoverDebtAndFees field', () => {
@@ -39,12 +41,18 @@ describe('Dog#handleBark', () => {
     systemState.totalDaiAmountToCoverDebtAndFees = BigDecimal.fromString('500.0')
     systemState.save()
 
+    // ChainLog.save(MCD_CLIP_ + ilk)
+    let chainLog = new ChainLog("MCD_CLIP_ETH_A")
+    chainLog.address = Address.fromString(clip)
+    chainLog.save()
+
     handleBark(event)
 
     assert.fieldEquals('SystemState', 'current', 'totalDaiAmountToCoverDebtAndFees', '600')
-
-    assert.fieldEquals('SaleAuction', id.toString(), 'vault', urn + '-' + ilk.toString())
-    assert.fieldEquals('SaleAuction', id.toString(), 'collateralType', ilk.toString())
+    let idStr = id.toString() + "-" + clip
+    assert.fieldEquals('SaleAuction', idStr, 'vault', urn + '-' + ilk.toString())
+    assert.fieldEquals('SaleAuction', idStr, 'collateralType', ilk.toString())
+    assert.fieldEquals('SaleAuction', idStr, 'startedAt', "1001")
 
     assert.fieldEquals('CollateralType', ilk, 'daiAmountToCoverDebtAndFees', '200')
 

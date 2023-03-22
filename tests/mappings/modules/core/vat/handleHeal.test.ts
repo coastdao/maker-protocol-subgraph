@@ -4,6 +4,7 @@ import { SystemDebt, SystemState, User } from '../../../../../generated/schema'
 import { LogNote } from '../../../../../generated/Vat/Vat'
 import { handleHeal } from '../../../../../src/mappings/modules/core/vat'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockDebt } from '../../../../helpers/mockedFunctions'
 
 function createEvent(rad: string): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x1a0b287e'))
@@ -35,6 +36,7 @@ test('Vat#handleHeal', () => {
   systemState.totalSystemDebt = BigDecimal.fromString('2000')
   systemState.save()
 
+  mockDebt("1000000000000000000000000000000000000000000000000")
   handleHeal(event)
 
   assert.fieldEquals('User', senderAddress, 'totalVaultDai', '899.5')

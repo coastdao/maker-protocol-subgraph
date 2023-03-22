@@ -3,6 +3,8 @@ import { test, clearStore, assert, log, describe } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Flop/Flopper'
 import { handleFile } from '../../../../../src/mappings/modules/system-stabilizer/flop'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(what: string, data: string): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x1a0b287e'))
@@ -27,6 +29,11 @@ describe('Flopper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'debtAuctionMinimumBidIncrease', '100')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "FLOP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "100")
 
       clearStore()
     })
@@ -42,6 +49,11 @@ describe('Flopper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'debtAuctionLotSizeIncrease', '100')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'contractType', "FLOP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigDecimal', protocolParameterChangeLogId, 'parameterValue', "100")
 
       clearStore()
     })
@@ -57,6 +69,11 @@ describe('Flopper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'debtAuctionBidDuration', '60')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "FLOP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "60")
 
       clearStore()
     })
@@ -72,6 +89,11 @@ describe('Flopper#handleFile', () => {
       handleFile(event)
 
       assert.fieldEquals('SystemState', 'current', 'debtAuctionDuration', '60')
+      let protocolParameterChangeLogId = event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'contractType', "FLOP")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey1', what)
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterKey2', "")
+      assert.fieldEquals('ProtocolParameterChangeLogBigInt', protocolParameterChangeLogId, 'parameterValue', "60")
 
       clearStore()
     })

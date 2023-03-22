@@ -16,6 +16,66 @@ This subgraph aims to track the status of the Multi-Collateral DAI (MCD) through
 
 ---
 
+## Necessary
+
+- _ Must be placed in the same level directory as dss deploy scripts
+
+- _ Dss deploy scripts must have contracts. json present
+
+- _ If you need to update mainnet information, there must be dss deploy scripts/out/{the network you entered}}/addresses. json present
+
+- _ Modify the IP in package.json
+- 
+
+## How to work 
+
+
+yarn
+
+```
+
+1. Initialize subgraph. yaml and contract abi
+
+    ./InitConfig.sh initNetworkData mainnet
+    
+    ./InitConfig.sh initNetworkData testchain
+    
+    ./InitConfig.sh initABI mainnet
+    
+    Fill the contract address and block height into subgraph. yaml
+    
+    yarn fix-network:testchain / mainnet
+
+
+2. Start the graph node in the docker first
+
+    cd docker && ./ run_ graph_ node.sh init
+
+
+3. Compilation contract
+
+    yarn codegen
+    
+    yarn build
+
+
+4. Deploy subgraph on graph node
+
+    yarn create-local
+    
+    yarn deploy-local
+
+
+
+.clean
+
+    Yarn remove local Delete subgraph in graph node
+    
+    Yarn clean cleans up all generated files
+
+```
+
+
 ## Data sources
 
 ### Core Module:

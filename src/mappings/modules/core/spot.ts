@@ -1,7 +1,7 @@
 import { Bytes } from '@graphprotocol/graph-ts'
 import { bytes, units } from '@protofire/subgraph-toolkit'
 
-import { LogNote, Poke } from '../../../../generated/Spot/Spotter'
+import { LogNote, Poke } from '../../../../generated/Spotter/Spotter'
 
 import {
   CollateralPrice,
@@ -11,7 +11,7 @@ import {
   LiveChangeLog,
 } from '../../../../generated/schema'
 
-import { system } from '../../../entities'
+import { system, protocolParameterChangeLogs as changeLogs } from '../../../entities'
 
 export function handleFile(event: LogNote): void {
   let ilk = event.params.arg1.toString()
@@ -32,6 +32,9 @@ export function handleFile(event: LogNote): void {
 
       let state = system.getSystemState(event)
       state.save()
+
+      changeLogs.createProtocolParameterChangeLog(event, "SPOT", "mat", ilk,
+        new changeLogs.ProtocolParameterValueBigDecimal(collateralType.liquidationRatio))
     }
   } else if (what == 'pip') {
     let collateralType = CollateralType.load(ilk)
@@ -49,6 +52,9 @@ export function handleFile(event: LogNote): void {
 
       let state = system.getSystemState(event)
       state.save()
+
+      changeLogs.createProtocolParameterChangeLog(event, "SPOT", "pip", ilk,
+        new changeLogs.ProtocolParameterValueBigDecimal(price.value))
     }
   } else if (what == 'par') {
     let log = new SpotParLog(event.transaction.hash.toHexString())
@@ -60,6 +66,9 @@ export function handleFile(event: LogNote): void {
 
     let state = system.getSystemState(event)
     state.save()
+
+    changeLogs.createProtocolParameterChangeLog(event, "SPOT", "par", "",
+      new changeLogs.ProtocolParameterValueBigInt(data))
   }
 }
 
@@ -84,7 +93,7 @@ export function handlePoke(event: Poke): void {
     collateral.save()
 
     let log = new CollateralPriceUpdateLog(event.transaction.hash.toHex() + '-' + event.logIndex.toString() + '-1')
-    log.collateral = ilk
+    log.collateral = collateral.id
     log.newValue = value
     log.newSpotPrice = spotPrice
 

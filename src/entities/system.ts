@@ -1,11 +1,17 @@
 import { ethereum, Address } from '@graphprotocol/graph-ts'
 import { decimal, integer, units } from '@protofire/subgraph-toolkit'
 
-import { SystemState } from '../../generated/schema'
+import { ChainLog, SystemState } from '../../generated/schema'
 import { Vat } from '../../generated/Vat/Vat'
 export namespace system {
   export function getSystemState(event: ethereum.Event): SystemState {
-    let vatContract = Vat.bind(Address.fromString('0x35d1b3f3d7966a1dfe207aa4514c12a259a0492b'))
+    const chainLog = ChainLog.load("MCD_VAT")
+    // this is mainnet address of MCD_VAT
+    let address: string = '0x35d1b3f3d7966a1dfe207aa4514c12a259a0492b'
+    if (chainLog) {
+      address = chainLog.address.toHexString()
+    }
+    let vatContract = Vat.bind(Address.fromString(address))
     let state = SystemState.load('current')
 
     if (state == null) {
@@ -36,6 +42,11 @@ export namespace system {
       state.totalDaiAmountToCoverDebtAndFees = decimal.ZERO
     }
 
+    // Hotfix for totalDebt
+    let debt = vatContract.try_debt();
+    state.totalDebt = debt.reverted ? state.totalDebt : units.fromRad(debt.value);
+    // timestamp for daistats
+    state.timestamp = event.block.timestamp
     return state as SystemState
   }
 }

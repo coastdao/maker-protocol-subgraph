@@ -3,7 +3,8 @@ import { describe, test, assert, clearStore } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Pot/Pot'
 import { handleDrip } from '../../../../../src/mappings/modules/rates/pot'
 import { tests } from '../../../../../src/mappings/modules/tests'
-import { mockChi } from '../../../../helpers/mockedFunctions'
+import { mockChi, mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x58326b7a'))

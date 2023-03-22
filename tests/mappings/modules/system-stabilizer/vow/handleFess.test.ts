@@ -3,6 +3,8 @@ import { test, clearStore, assert } from 'matchstick-as'
 import { LogNote } from '../../../../../generated/Vow/Vow'
 import { handleFess } from '../../../../../src/mappings/modules/system-stabilizer/vow'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function strRadToBytes(tab: string): Bytes {
   return Bytes.fromUint8Array(Bytes.fromBigInt(BigInt.fromString(tab)).reverse())

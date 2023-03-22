@@ -1,7 +1,11 @@
 [
   {
     "inputs": [
-      { "internalType": "address", "name": "vat_", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "vat_",
+        "type": "address"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
@@ -55,7 +59,12 @@
     "name": "Bark",
     "type": "event"
   },
-  { "anonymous": false, "inputs": [], "name": "Cage", "type": "event" },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "Cage",
+    "type": "event"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -192,25 +201,55 @@
   {
     "inputs": [],
     "name": "Dirt",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "Hole",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "ilk", "type": "bytes32" },
-      { "internalType": "address", "name": "urn", "type": "address" },
-      { "internalType": "address", "name": "kpr", "type": "address" }
+      {
+        "internalType": "bytes32",
+        "name": "ilk",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "urn",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "kpr",
+        "type": "address"
+      }
     ],
     "name": "bark",
-    "outputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -222,14 +261,32 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "bytes32", "name": "ilk", "type": "bytes32" }],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "ilk",
+        "type": "bytes32"
+      }
+    ],
     "name": "chop",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "usr", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "usr",
+        "type": "address"
+      }
+    ],
     "name": "deny",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -237,8 +294,16 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "ilk", "type": "bytes32" },
-      { "internalType": "uint256", "name": "rad", "type": "uint256" }
+      {
+        "internalType": "bytes32",
+        "name": "ilk",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rad",
+        "type": "uint256"
+      }
     ],
     "name": "digs",
     "outputs": [],
@@ -247,9 +312,21 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "ilk", "type": "bytes32" },
-      { "internalType": "bytes32", "name": "what", "type": "bytes32" },
-      { "internalType": "uint256", "name": "data", "type": "uint256" }
+      {
+        "internalType": "bytes32",
+        "name": "ilk",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "what",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "data",
+        "type": "uint256"
+      }
     ],
     "name": "file",
     "outputs": [],
@@ -258,8 +335,16 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "what", "type": "bytes32" },
-      { "internalType": "uint256", "name": "data", "type": "uint256" }
+      {
+        "internalType": "bytes32",
+        "name": "what",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "data",
+        "type": "uint256"
+      }
     ],
     "name": "file",
     "outputs": [],
@@ -268,8 +353,16 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "what", "type": "bytes32" },
-      { "internalType": "address", "name": "data", "type": "address" }
+      {
+        "internalType": "bytes32",
+        "name": "what",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "data",
+        "type": "address"
+      }
     ],
     "name": "file",
     "outputs": [],
@@ -278,9 +371,21 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "ilk", "type": "bytes32" },
-      { "internalType": "bytes32", "name": "what", "type": "bytes32" },
-      { "internalType": "address", "name": "clip", "type": "address" }
+      {
+        "internalType": "bytes32",
+        "name": "ilk",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "what",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "clip",
+        "type": "address"
+      }
     ],
     "name": "file",
     "outputs": [],
@@ -288,13 +393,35 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "name": "ilks",
     "outputs": [
-      { "internalType": "address", "name": "clip", "type": "address" },
-      { "internalType": "uint256", "name": "chop", "type": "uint256" },
-      { "internalType": "uint256", "name": "hole", "type": "uint256" },
-      { "internalType": "uint256", "name": "dirt", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "clip",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chop",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hole",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dirt",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -302,12 +429,24 @@
   {
     "inputs": [],
     "name": "live",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "usr", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "usr",
+        "type": "address"
+      }
+    ],
     "name": "rely",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -317,7 +456,11 @@
     "inputs": [],
     "name": "vat",
     "outputs": [
-      { "internalType": "contract VatLike", "name": "", "type": "address" }
+      {
+        "internalType": "contract VatLike",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -326,15 +469,31 @@
     "inputs": [],
     "name": "vow",
     "outputs": [
-      { "internalType": "contract VowLike", "name": "", "type": "address" }
+      {
+        "internalType": "contract VowLike",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "wards",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   }

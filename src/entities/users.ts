@@ -19,6 +19,8 @@ export namespace users {
         user.totalDaiBalance = BigDecimal.zero()
         user.proxyCount = integer.ZERO
         user.vaultCount = integer.ZERO
+        user.voteWeight = integer.ZERO
+        user.voteSlate = ""
       }
     }
 

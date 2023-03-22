@@ -1,6 +1,6 @@
 import { bytes, units } from '@protofire/subgraph-toolkit'
-import { Kick, LogNote } from '../../../../generated/Flop/Flopper'
-import { system as systemModule } from '../../../entities'
+import { Kick, LogNote } from '../../../../generated/Flopper/Flopper'
+import { system as systemModule, protocolParameterChangeLogs as changeLogs } from '../../../entities'
 import { auctions } from '../../../entities/auctions'
 import { LiveChangeLog } from '../../../../generated/schema'
 import { BigInt } from '@graphprotocol/graph-ts'
@@ -13,12 +13,20 @@ export function handleFile(event: LogNote): void {
 
   if (what == 'beg') {
     system.debtAuctionMinimumBidIncrease = units.fromWad(data)
+    changeLogs.createProtocolParameterChangeLog(event, "FLOP", what, "",
+      new changeLogs.ProtocolParameterValueBigDecimal(units.fromWad(data)))
   } else if (what == 'pad') {
     system.debtAuctionLotSizeIncrease = units.fromWad(data)
+    changeLogs.createProtocolParameterChangeLog(event, "FLOP", what, "",
+      new changeLogs.ProtocolParameterValueBigDecimal(units.fromWad(data)))
   } else if (what == 'ttl') {
     system.debtAuctionBidDuration = data
+    changeLogs.createProtocolParameterChangeLog(event, "FLOP", what, "",
+      new changeLogs.ProtocolParameterValueBigInt(data))
   } else if (what == 'tau') {
     system.debtAuctionDuration = data
+    changeLogs.createProtocolParameterChangeLog(event, "FLOP", what, "",
+      new changeLogs.ProtocolParameterValueBigInt(data))
   }
 
   system.save()

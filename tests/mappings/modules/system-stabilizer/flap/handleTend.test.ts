@@ -4,6 +4,8 @@ import { LogNote } from '../../../../../generated/Flap/Flapper'
 import { auctions, system as systemModule } from '../../../../../src/entities'
 import { handleTend } from '../../../../../src/mappings/modules/system-stabilizer/flap'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('Flapper#handleTend', () => {
   test('updates the highestBidder, bidAmount and the endTimeAt', () => {

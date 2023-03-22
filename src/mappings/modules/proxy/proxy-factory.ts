@@ -1,6 +1,6 @@
 import { integer } from '@protofire/subgraph-toolkit'
 
-import { Created } from '../../../../generated/ProxyFactory/DSProxyFactory'
+import { Created } from '../../../../generated/DSProxyFactory/DSProxyFactory'
 import { UserProxy } from '../../../../generated/schema'
 
 import { users, system as systemModule } from '../../../entities'

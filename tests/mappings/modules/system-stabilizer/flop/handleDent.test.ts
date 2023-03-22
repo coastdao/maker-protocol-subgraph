@@ -4,6 +4,8 @@ import { LogNote } from '../../../../../generated/Flop/Flopper'
 import { auctions, system as systemModule } from '../../../../../src/entities'
 import { handleDent } from '../../../../../src/mappings/modules/system-stabilizer/flop'
 import { tests } from '../../../../../src/mappings/modules/tests'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 describe('Flopper#handleDent', () => {
   test('updates the highestBidder, quantity and endTimeAt', () => {

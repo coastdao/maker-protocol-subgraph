@@ -4,6 +4,8 @@ import { tests } from '../../../../../src/mappings/modules/tests'
 import { LogNote } from '../../../../../generated/Flap/Flapper'
 import { handleYank } from '../../../../../src/mappings/modules/system-stabilizer/flap'
 import { system as systemModule } from '../../../../../src/entities'
+import { mockCommon } from '../../../../helpers/mockedFunctions'
+mockCommon()
 
 function createEvent(id: BigInt): LogNote {
   let sig = tests.helpers.params.getBytes('sig', Bytes.fromHexString('0x26e027f1'))
